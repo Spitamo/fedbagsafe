@@ -1054,7 +1054,7 @@ def finetune(ple, modelname, model, n_nodes, n_round, state, modelpoisoning=Fals
     for i, node_model in enumerate(node_models):
         node_model = node_model.to(device)
         # Print status
-        node_status = 'Attack' if i < 33 and state != 'benign' else 'Normal'
+        node_status = 'Attack' if i < 24 and state != 'benign' else 'Normal'
         print(f'\n=== Fine-tuning Node {i} [{node_status}] | Mode: {state} ===')
 
         # Get appropriate dataloader
@@ -1073,7 +1073,7 @@ def finetune(ple, modelname, model, n_nodes, n_round, state, modelpoisoning=Fals
         )
         trainer.fit(node_model, _dataloader, eval_data_loader)
 
-        if i < 33 and modelpoisoning:
+        if i < 24 and modelpoisoning:
             print("mp is activated")
             with torch.no_grad():
                 for param in node_model.parameters():
@@ -1195,7 +1195,7 @@ def random_client_selection(node_models, globalmodel, modelname):
     #     (0, 67)
     # ]
     n_nodes=100
-    start = 33
+    start = 24
     end = 0
     aggregation_configs = []
     sum = 67
@@ -1212,8 +1212,8 @@ def random_client_selection(node_models, globalmodel, modelname):
             selected_indices = random.sample(range(0, n_nodes), n_nodes)
         else:
             # Controlled attack aggregation
-            attack_indices = random.sample(range(0, 33), num_attack)
-            normal_indices = random.sample(range(33, n_nodes), num_normal)
+            attack_indices = random.sample(range(0, 24), num_attack)
+            normal_indices = random.sample(range(24, n_nodes), num_normal)
             selected_indices = attack_indices + normal_indices
 
         selected_models = [node_models[i] for i in selected_indices]
