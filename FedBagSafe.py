@@ -532,10 +532,11 @@ def create_round_dataloaders(nodes_data, nodes_labels, n_nodes, n_rounds, attack
             )
             round_dataloaders.append(dataloader)
         result_loaders.append(round_dataloaders)
+        
 
     return result_loaders
 
-def dataloader(mode: str, malicious_clients: int = 33, target_label: int = 9):
+def dataloader(mode: str, malicious_clients: int = 24, target_label: int = 9):
 
     central_data, central_labels, nodes_data, nodes_labels, test_data, test_labels, test_dataset, train_ds, n_classes = noniid(mode)
     
