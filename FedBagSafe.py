@@ -1195,7 +1195,7 @@ def random_client_selection(node_models, globalmodel, modelname):
     #     (0, 67)
     # ]
     n_nodes=100
-    start = 24
+    start = 33
     end = 0
     aggregation_configs = []
     sum = 67
@@ -1212,8 +1212,8 @@ def random_client_selection(node_models, globalmodel, modelname):
             selected_indices = random.sample(range(0, n_nodes), n_nodes)
         else:
             # Controlled attack aggregation
-            attack_indices = random.sample(range(0, 24), num_attack)
-            normal_indices = random.sample(range(24, n_nodes), num_normal)
+            attack_indices = random.sample(range(0, 33), num_attack)
+            normal_indices = random.sample(range(33, n_nodes), num_normal)
             selected_indices = attack_indices + normal_indices
 
         selected_models = [node_models[i] for i in selected_indices]
