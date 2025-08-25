@@ -1,5 +1,15 @@
 # FedBagSafe: Robust and Personalized Federated Learning Framework
 
+<!-- Badges Section -->
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.7%2B-blue.svg?logo=python&logoColor=white" alt="Python 3.7+"></a>
+  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-1.10%2B-%23ee4c2c?logo=pytorch&logoColor=white" alt="PyTorch"></a>
+  <a href="https://pytorch.org/vision/stable/index.html"><img src="https://img.shields.io/badge/TorchVision-0.11%2B-orange?logo=pytorch&logoColor=white" alt="TorchVision"></a>
+  <a href="https://www.pytorchlightning.ai/"><img src="https://img.shields.io/badge/PyTorch%20Lightning-2.0%2B-purple?logo=pytorch-lightning&logoColor=white" alt="PyTorch Lightning"></a>
+  <a href="https://numpy.org/"><img src="https://img.shields.io/badge/numpy-1.21%2B-informational?logo=numpy&logoColor=white" alt="NumPy"></a>
+<!--   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a> -->
+</p>
+
 **FedBagSafe** is an advanced federated learning protocol for robust, personalized, and privacy-preserving training of deep learning models under adversarial and non-IID conditions.  
 It implements a **bagged aggregation scheme, interpretable client-side validation, head-only model updates, and an adaptive fail-safe mechanism** to significantly improve resilience against label flipping, backdoor, and model poisoning attacks.
 
