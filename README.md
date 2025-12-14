@@ -10,6 +10,12 @@
 <!--   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a> -->
 </p>
 
+<p align="center">
+<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5867902">
+<img src="https://img.shields.io/badge/Paper-SSRN-blueviolet?style=flat&logo=arxiv&logoColor=white" alt="SSRN Paper">
+</a>
+</p>
+
 **FedBagSafe** is an advanced federated learning protocol for robust, personalized, and privacy-preserving training of deep learning models under adversarial and non-IID conditions.  
 It implements a **bagged aggregation scheme, interpretable client-side validation, head-only model updates, and an adaptive fail-safe mechanism** to significantly improve resilience against label flipping, backdoor, and model poisoning attacks.
 
