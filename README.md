@@ -7,8 +7,9 @@
   <a href="https://pytorch.org/vision/stable/index.html"><img src="https://img.shields.io/badge/TorchVision-0.11%2B-orange?logo=pytorch&logoColor=white" alt="TorchVision"></a>
   <a href="https://www.pytorchlightning.ai/"><img src="https://img.shields.io/badge/PyTorch%20Lightning-2.0%2B-purple?logo=pytorch-lightning&logoColor=white" alt="PyTorch Lightning"></a>
   <a href="https://numpy.org/"><img src="https://img.shields.io/badge/numpy-1.21%2B-informational?logo=numpy&logoColor=white" alt="NumPy"></a>
-<!--   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a> -->
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
+
 
 <p align="center">
 <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5867902">
