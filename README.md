@@ -1,6 +1,6 @@
 # FedBagSafe: Robust and Personalized Federated Learning Framework
 
-<p align="left">
+<p align="center">
   <a href="https://www.python.org/">
     <img src="https://img.shields.io/badge/python-3.8%2B-blue.svg?logo=python&logoColor=white" alt="Python">
   </a>
@@ -18,7 +18,7 @@
   </a>
 </p>
 
-<p align="left">
+<p align="center">
   <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5867902">
     <img src="https://img.shields.io/badge/Paper-SSRN-blueviolet?style=flat&logo=arxiv&logoColor=white" alt="SSRN Paper">
   </a>
