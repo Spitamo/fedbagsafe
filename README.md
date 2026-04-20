@@ -78,30 +78,33 @@ This design helps reduce the impact of poisoned clients while avoiding abrupt dr
 
 ```text
 ├── config/
-│   ├── config.yaml          # Master configuration file
-│   └── config_parser.py     # YAML and CLI argument parser
+│   ├── config.yaml             # Master configuration file
+│   └── config_parser.py        # YAML and CLI argument parser
 ├── data/
-│   ├── dataset_loader.py    # CIFAR-10/100, FashionMNIST, FEMNIST loaders
-│   ├── dataset_modes.py     # Attack mode definitions
-│   └── data_utils.py        # Non-IID Dirichlet distribution tools
+│   ├── dataset_loader.py       # CIFAR-10/100, FashionMNIST, FEMNIST loaders
+│   ├── dataset_modes.py        # Attack mode definitions
+│   └── data_utils.py           # Non-IID Dirichlet distribution tools
 ├── evaluation/
-│   └── evaluator.py         # Model evaluation and metrics computation
+│   └── evaluator.py            # Model evaluation and metrics computation
 ├── models/
-│   ├── base_model.py        # PyTorch Lightning base module
-│   ├── model_factory.py     # Checkpoint and architecture loading
-│   └── resnet*.py           # ResNet9 and CIFAR-ResNet variants
+│   ├── base_model.py           # PyTorch Lightning base module
+│   ├── cifar_resnet.py         # ResNet50 variant for CIFAR
+│   ├── model_factory.py        # Checkpoint and architecture loading
+│   ├── resnet9.py              # Generic ResNet9 architecture
+│   ├── resnet9_fashionmnist.py # ResNet9 optimized for FashionMNIST
+│   └── resnet9_femnist.py      # ResNet9 optimized for FEMNIST
 ├── security/
-│   ├── encryption.py        # TenSEAL CKKS encryption context
-│   └── aggregation_he.py    # Secure encrypted aggregation
+│   ├── encryption.py           # TenSEAL CKKS encryption context
+│   └── aggregation_he.py       # Secure encrypted aggregation
 ├── training/
-│   ├── federated_trainer.py  # Main FL loop & phase scheduler
-│   ├── local_trainer.py      # Client-side training logic
-│   └── aggregation.py       # Bagging & selective weighted average
+│   ├── federated_trainer.py    # Main FL loop & phase scheduler
+│   ├── local_trainer.py        # Client-side training logic
+│   └── aggregation.py          # Bagging & Selective weighted average
 ├── utils/
-│   ├── logging_utils.py     # Verbose and file logging
-│   ├── seed_utils.py        # Reproducibility constraints
-│   └── device_utils.py      # CPU/CUDA device management
-└── main.py                  # Framework entry point
+│   ├── logging_utils.py        # Verbose and file logging
+│   ├── seed_utils.py           # Reproducibility constraints
+│   └── device_utils.py         # CPU/CUDA device management
+└── main.py                     # Framework Entry Point
 ```
 
 ---
