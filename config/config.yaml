@@ -1,0 +1,87 @@
+# Dataset Configuration
+dataset:
+  mode: 'fashionmnist'  # choices: cifar10, cifar100, fashionmnist, femnist
+  root: '.'
+  download: true
+
+
+model:
+  name: 'resnet9'  
+  dropout: 0.3
+  pretrained: true
+  checkpoint_dir: './checkpoints' 
+  load_pretrained: true  
+
+
+#federated Learning Configuration
+federated:
+  n_nodes: 100
+  n_rounds: 100
+  samples_per_client: 400
+  min_samples: 20
+  max_samples: 40
+  local_epochs: 1
+  fail_safe_alpha: 0.95
+
+# training Configuration
+training:
+  batch_size: 8
+  eval_batch_size: 64
+  num_workers: 8
+  learning_rate: 5e-5
+  weight_decay: 1e-2
+  gradient_clip: 1.0
+
+# attack Configuration
+attack:
+  enabled: true
+  malicious_clients: 24
+  target_label: 9
+  types:
+    - 'clean'
+    - 'backdoor'
+    - 'label_flip'
+    - 'model_poisoning'
+
+# homomorphic Encryption Configuration
+encryption:
+  enabled: false  # Set to true to enable HE aggregation
+  type: 'CKKS'    # choices: CKKS
+  poly_modulus_degree: 8192
+  coeff_mod_bit_sizes: [60, 40, 40, 60]
+  global_scale: 1099511627776
+
+# aggregation Configuration
+aggregation:
+  mode: 'weighted_average'  # weighted_average
+  he_enabled: false  # 0verride encryption.enabled if specified
+  selection_strategy: 'random'  # random, deterministic
+
+# device Configuration
+device:
+  type: 'cpu'  # cpu, cuda
+
+# logging Configuration
+logging:
+  level: 'INFO'
+  verbose: true
+  save_logs: false
+  log_file: 'federated_learning.log'
+
+# checkpointing
+checkpoint:
+  enabled: true
+  save_dir: './checkpoints'
+  save_interval: 5
+
+# random Seed
+seed: 42
+
+# framwork phases
+phases:
+  stable_initialization: 10
+  gradual_attack_introduction: 15
+  moderate_attack_frequency: 25
+  high_intensity_attacks: 25
+  consecutive_attack_stress_test: 10
+  recovery_and_final_validation: 15
