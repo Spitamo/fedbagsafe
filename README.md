@@ -33,13 +33,13 @@
 FedBagSafe is built to support secure and configurable federated learning experiments with modular components for data handling, model training, encrypted aggregation, and adaptive client-side model selection. The framework is designed for research on robustness, personalization, and attack resilience in federated learning.
 
 <p align="center">
-  <img src="assets/fedbagsafe-phase1.png" alt="FedBagSafe phase 1 overview" width="95%">
+  <img src="assets/fedbagsafe-phase1.jpg" alt="FedBagSafe phase 1 overview" width="95%">
 </p>
 
 *Figure 1: First phase of FedBagSafe showing server-side bagged multi-aggregation with HE-based encrypted head-layer aggregation.*
 
 <p align="center">
-  <img src="assets/fedbagsafe-phase2.png" alt="FedBagSafe phase 2 overview" width="95%">
+  <img src="assets/fedbagsafe-phase2.jpg" alt="FedBagSafe phase 2 overview" width="95%">
 </p>
 
 *Figure 2: Second phase of FedBagSafe showing client-side evaluation, model selection, and adaptive fail-safe acceptance.*
@@ -77,43 +77,6 @@ This design helps reduce the impact of poisoned clients while avoiding abrupt dr
 ## Repository Structure
 
 ```text
-# FedBagSafe: Robust and Personalized Federated Learning Framework
-
-<!-- Badges Section -->
-<p align="left">
-  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.8%2B-blue.svg?logo=python&logoColor=white" alt="Python"></a>
-  <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-2.0%2B-%23ee4c2c?logo=pytorch&logoColor=white" alt="PyTorch"></a>
-  <a href="https://www.pytorchlightning.ai/"><img src="https://img.shields.io/badge/PyTorch%20Lightning-2.0%2B-purple?logo=pytorch-lightning&logoColor=white" alt="PyTorch Lightning"></a>
-  <a href="https://github.com/OpenMined/TenSEAL"><img src="https://img.shields.io/badge/TenSEAL-HE-success?logo=shield&logoColor=white" alt="TenSEAL"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
-</p>
-
-<p align="left">
-<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5867902">
-<img src="https://img.shields.io/badge/Paper-SSRN-blueviolet?style=flat&logo=arxiv&logoColor=white" alt="SSRN Paper">
-</a>
-</p>
-
-**FedBagSafe** is an advanced, highly modular federated learning protocol designed for robust, personalized, and privacy-preserving training of deep learning models under adversarial and non-IID conditions. 
-
-The framework has been completely rewritten to support **YAML-based configuration**, **Command-Line Interfaces (CLI)**, and **Homomorphic Encryption (CKKS)** via TenSEAL, alongside its core **bagged aggregation scheme** and **adaptive fail-safe mechanisms**.
-
----
-
-##  Key Features
-
-- ** Robust Bagged Aggregation:** Generates multiple candidate models per round using aggregation over random client subsets. Enhances robustness by diluting malicious impact.
-- ** Homomorphic Encryption (HE):** Integrated CKKS scheme via TenSEAL to perform secure, encrypted model aggregation on the server side (`--enable-he`).
-- ** Modular & Configurable:** Control datasets, models, attack phases, and hyperparameters effortlessly via `config.yaml` or direct CLI arguments.
-- ** Built-in Adversarial Scenarios:** Native support for simulating Label Flipping, Backdoor (Mixed/Full), and Model Poisoning attacks over a phased, realistic schedule.
-- ** Parameter-Efficient Fine-Tuning:** "Head-only" local updating limits communication overhead and preserves generalized feature extractors while personalizing classifiers.
-- ** Adaptive Fail-Safe:** Dynamically rejects malicious or degraded model updates to prevent sudden accuracy drops using local validation scores.
-
----
-
-## 📂 Project Structure
-
-```text
 ├── config/
 │   ├── config.yaml          # Master configuration file
 │   └── config_parser.py     # YAML and CLI argument parser
@@ -131,14 +94,14 @@ The framework has been completely rewritten to support **YAML-based configuratio
 │   ├── encryption.py        # TenSEAL CKKS encryption context
 │   └── aggregation_he.py    # Secure encrypted aggregation
 ├── training/
-│   ├── federated_trainer.py # Main FL loop & phase scheduler
-│   ├── local_trainer.py     # Client-side training logic
-│   └── aggregation.py       # Bagging & Selective weighted average
+│   ├── federated_trainer.py  # Main FL loop & phase scheduler
+│   ├── local_trainer.py      # Client-side training logic
+│   └── aggregation.py       # Bagging & selective weighted average
 ├── utils/
 │   ├── logging_utils.py     # Verbose and file logging
-│   └── seed_utils.py        # Reproducibility constraints
+│   ├── seed_utils.py        # Reproducibility constraints
 │   └── device_utils.py      # CPU/CUDA device management
-└── main.py                  # Framework Entry Point
+└── main.py                  # Framework entry point
 ```
 
 ---
@@ -146,12 +109,14 @@ The framework has been completely rewritten to support **YAML-based configuratio
 ## Installation
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/Spitamo/FedBagSafe.git
 cd FedBagSafe
 ```
 
 ### 2. Install dependencies
+
 Requires Python 3.8+.
 
 ```bash
@@ -159,6 +124,7 @@ pip install torch torchvision pytorch-lightning numpy pyyaml
 ```
 
 ### 3. Optional: Install TenSEAL for homomorphic encryption
+
 ```bash
 pip install tenseal
 ```
@@ -172,6 +138,7 @@ pip install tenseal
 FedBagSafe can be executed through `main.py`. Configuration can be provided through the YAML file, command-line arguments, or both, where CLI arguments override YAML settings.
 
 ### Standard Runs
+
 ```bash
 # Run using the default configuration file
 python main.py --config config/config.yaml
@@ -184,6 +151,7 @@ python main.py --dataset cifar10 --disable-he --n-rounds 50
 ```
 
 ### Configuration Example
+
 ```yaml
 dataset:
   mode: fashionmnist
@@ -232,10 +200,12 @@ If you use FedBagSafe in your research, please cite the associated paper.
 
 ```bibtex
 @misc{fedbagsafe,
-  title        = {FedBagSafe: Bagged Adaptive Selection and Fail-Safe Aggregation for Robust, Privacy-Preserving, and Personalized Federated Learning},
-  author       = {Ebrahimi Atani, Reza and Razavi, Seyed Saeed and Dadashi Pakdeh, Soroosh and Vasegh Rahimparvar, Arsalan},
-  year         = {2026},
-  note         = {Available at SSRN: https://ssrn.com/abstract=5867902 or http://dx.doi.org/10.2139/ssrn.5867902}
+  title  = {FedBagSafe: Bagged Adaptive Selection and Fail-Safe Aggregation for Robust, Privacy-Preserving, and Personalized Federated Learning},
+  author = {Ebrahimi Atani, Reza and Razavi, Seyed Saeed and Dadashi Pakdeh, Soroosh and Vasegh Rahimparvar, Arsalan},
+  year   = {2026},
+  url    = {https://ssrn.com/abstract=5867902},
+  doi    = {10.2139/ssrn.5867902},
+  note   = {Available at SSRN}
 }
 ```
 
