@@ -129,7 +129,6 @@ pip install torch torchvision pytorch-lightning numpy pyyaml
 pip install tenseal
 ```
 
-> Note: For FEMNIST, ensure that the preprocessed `flattened_emnist.pt` file is placed in the project root directory.
 
 ---
 
