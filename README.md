@@ -1,4 +1,5 @@
-# FedBagSafe: Robust and Personalized Federated Learning Framework
+# FedBagSafe: Bagged Adaptive Selection and Fail-Safe Aggregation for Robust, Privacy-Preserving, and Personalized Federated Learning
+
 
 <p align="center">
   <a href="https://www.python.org/">
@@ -24,13 +25,19 @@
   </a>
 </p>
 
-**FedBagSafe** is a robust and personalized federated learning framework designed for adversarial and non-IID environments. It combines bagged aggregation, homomorphic encryption, and an adaptive fail-safe mechanism to improve resilience, privacy, and stability during federated training.
+**FedBagSafe** is a robust, privacy-preserving, and personalized federated learning framework for adversarial and non-IID settings. It combines bagged multi-aggregation, optional homomorphic encryption via TenSEAL, and an adaptive fail-safe selection mechanism to improve robustness, stability, and personalization during federated training.
+
+The project is designed for research on **Byzantine robustness, secure aggregation, model poisoning defense, backdoor resilience, and personalized FL**. It provides modular components for data partitioning, local training, encrypted aggregation, client-side validation, and experiment reproducibility.
 
 ---
 
 ## Overview
 
-FedBagSafe is built to support secure and configurable federated learning experiments with modular components for data handling, model training, encrypted aggregation, and adaptive client-side model selection. The framework is designed for research on robustness, personalization, and attack resilience in federated learning.
+Federated learning is vulnerable to malicious clients, highly heterogeneous client data, and unstable optimization under non-IID distributions. FedBagSafe addresses these issues by combining **bagged aggregation** on the server with **client-side model selection** on the edge, so that candidate updates are evaluated before they are accepted.
+
+The framework is structured to support experiments on CIFAR-10, CIFAR-100, FashionMNIST, and FEMNIST under label-flipping, backdoor, and model-poisoning attacks. It is especially useful when you want to study the trade-off between robustness, communication cost, privacy, and personalization in federated learning.
+
+
 
 <p align="center">
   <img src="assets/fedbagsafe-phase1.jpg" alt="FedBagSafe phase 1 overview" width="95%">
@@ -48,20 +55,28 @@ FedBagSafe is built to support secure and configurable federated learning experi
 
 ## Key Features
 
-- **Robust Bagged Aggregation:** Samples multiple overlapping client subsets per round to reduce adversarial influence.
-- **Homomorphic Encryption (HE):** Supports CKKS-based encrypted aggregation via TenSEAL.
-- **Modular Configuration:** Uses YAML files and CLI arguments for flexible experiment control.
-- **Adversarial Scenario Support:** Includes label flipping, backdoor, and model poisoning attacks.
-- **Personalized Fine-Tuning:** Updates only the head layers to reduce communication cost and improve personalization.
-- **Adaptive Fail-Safe:** Accepts a new local model only if it improves validation performance beyond a threshold.
+- **Bagged aggregation:** The server samples multiple overlapping client subsets per round to reduce the influence of malicious updates. 
+- **Client-side validation:** Each client evaluates candidate models locally and keeps the one that performs best on validation data. 
+- **Adaptive fail-safe:** A candidate model is accepted only when it clears the selection rule, helping avoid performance collapse from low-quality updates. 
+- **Personalized FL:** Only the head layers are trained and aggregated, which reduces communication and helps adaptation under heterogeneity.
+- **Optional homomorphic encryption:** TenSEAL CKKS can be used to encrypt model updates before aggregation for stronger privacy.
+- **Attack-aware design:** The framework supports label flipping, backdoor attacks, and model poisoning experiments. 
 
 ---
 
-## Motivation
+## Why FedBagSafe
 
-Federated learning often suffers from non-IID data, malicious clients, and unstable training dynamics. FedBagSafe addresses these issues by combining robust aggregation with client-side validation and encrypted communication of sensitive model updates. This makes the framework suitable for experiments that require both security and personalization.
+Standard federated averaging often struggles when clients are non-IID or when some of them are malicious. In those settings, a single bad update can damage the global model, especially when the server cannot inspect client data directly. FedBagSafe was designed to reduce that risk by diversifying candidate aggregations and moving the final acceptance decision closer to the client.
+
+This makes the framework useful for work on:
+- robust federated optimization,
+- secure and privacy-preserving aggregation,
+- personalized model training,
+- adversarial FL evaluation,
+- and controlled ablation studies on attack resilience.
 
 ---
+
 
 ## Method Summary
 
