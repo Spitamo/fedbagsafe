@@ -53,6 +53,8 @@ class FederatedTrainer:
 
         return schedule[:self.config.federated.n_rounds]
 
+    
+
     def train(self, data_info: Dict, global_model):
         """main federated training loop"""
         local_trainer = LocalTrainer(self.config, self.device)
@@ -60,7 +62,10 @@ class FederatedTrainer:
 
         attack_schedule = self.get_attack_schedule()
         model = global_model
-        best_score_prev = 0.0
+        
+        init_acc = evaluator.evaluate(global_model, data_info['dataloaders']['eval_loader'])
+        init_loss = evaluator.compute_loss(global_model, data_info['dataloaders']['eval_loader'])
+        best_score_prev = init_acc / max(init_loss, 1e-12)
 
         for round_id in range(self.config.federated.n_rounds):
             attack_state = attack_schedule[round_id]
@@ -146,6 +151,8 @@ class FederatedTrainer:
                 del agg_model
                 torch.cuda.empty_cache()
                 gc.collect()
+
+
 
             # fail-safe Mechanism
             best_score_prev = self.config.federated.fail_safe_alpha * best_score_prev
