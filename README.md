@@ -4,9 +4,6 @@
   <a href="https://doi.org/10.1016/j.compeleceng.2026.111669">
     <img src="https://img.shields.io/badge/Elsevier-Computers%20%26%20Electrical%20Engineering-orange?style=flat&logo=elsevier&logoColor=white" alt="Elsevier Paper">
   </a>
-  <a href="https://doi.org/10.1109/ICCKE68588.2025.11273877">
-    <img src="https://img.shields.io/badge/IEEE%20ICCKE-LightFedSelect%20(2025)-00629B?style=flat&logo=ieee&logoColor=white" alt="IEEE Paper">
-  </a>
   <a href="https://www.python.org/">
     <img src="https://img.shields.io/badge/python-3.8%2B-blue.svg?logo=python&logoColor=white" alt="Python">
   </a>
@@ -221,7 +218,6 @@ If you use **FedBagSafe** or this codebase in your research, please cite the *Co
   title = {FedBagSafe: Bagged adaptive selection and fail-safe aggregation for robust, privacy-preserving, and personalized Federated Learning},
   journal = {Computers and Electrical Engineering},
   volume = {141},
-  pages = {111669},
   year = {2027},
   issn = {0045-7906},
   doi = {10.1016/j.compeleceng.2026.111669},
