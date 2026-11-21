@@ -55,17 +55,17 @@ FedBagSafe operates in two core stages during each communication round:
 
 2. **Client-Side Composite Scoring & Fail-Safe Selection:** Each client evaluates the $M$ candidate models on a shared, read-only validation set ($\mathcal{T}_{\text{global}}$) using an accuracy-over-loss composite score:
 
-   ```math
-   S_i^{(t),j} = \frac{\text{Acc}_{\mathcal{T}_{\text{global}}}(\psi, \phi_i^{(t),j})}{\text{Loss}_{\mathcal{T}_{\text{global}}}(\psi, \phi_i^{(t),j}) + \epsilon}
-   ```
+$$
+S_i^{(t),j} = \frac{\text{Acc}_{\mathcal{T}_{\text{global}}}(\psi, \phi_i^{(t),j})}{\text{Loss}_{\mathcal{T}_{\text{global}}}(\psi, \phi_i^{(t),j}) + \epsilon}
+$$
 
-   Each client selects the candidate maximizing its composite score, $`j_i^* = \arg\max_j S_i^{(t),j}`$, and accepts the update only if it satisfies the multiplicative fail-safe threshold:
+Each client selects the candidate maximizing its composite score, $`j_i^* = \arg\max_j S_i^{(t),j}`$, and accepts the update only if it satisfies the multiplicative fail-safe threshold:
 
-   ```math
-   S_i^{(t)} \ge \tau \cdot S_i^{(t-1)}
-   ```
+$$
+S_i^{(t)} \ge \tau \cdot S_i^{(t-1)}
+$$
 
-   Otherwise, the client rejects the update and rolls back to its previous local model state $\phi_i^{(t-1)}$.
+Otherwise, the client rejects the update and rolls back to its previous local model state $\phi_i^{(t-1)}$.
 
 ---
 
