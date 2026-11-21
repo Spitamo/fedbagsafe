@@ -228,7 +228,7 @@ command samples:
 
     # validation
     parser.add_argument('--mode', type=str,
-                       choices=['deterministic', 'random'],
+                       choices=['random'],
                        help='Client selection mode')
 
     return parser
