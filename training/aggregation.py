@@ -4,19 +4,17 @@ import random
 from copy import deepcopy
 from typing import List, Tuple, Dict
 import gc
-from typing import List, Tuple, Dict  
-
+from typing import List, Tuple, Dict
 from models.model_factory import ModelFactory
 
 
-def selective_weighted_average_aggregation(
+def uniform_average_aggregation(
     node_models: List,
     global_model,
     dataset_mode: str,
     use_he: bool = False,
     he_config: Dict = None
 ):
-    """aggregate models using weighted average"""
     if use_he and he_config:
         from security.aggregation_he import aggregate_with_he
         return aggregate_with_he(node_models, global_model, dataset_mode, 
@@ -58,7 +56,9 @@ def random_client_selection(
     use_he: bool = False,
     he_config: Dict = None
 ) -> List[Tuple]:
+    
     """uniform random client selection"""
+    
     aggregated_models = []
 
     for _ in range(int(1 / 3 * n_nodes)):
@@ -70,7 +70,7 @@ def random_client_selection(
 
         selected_models = [node_models[idx] for idx in selected_indices]
 
-        agg_model = selective_weighted_average_aggregation(
+        agg_model = uniform_average_aggregation(
             selected_models, global_model, dataset_mode,
             use_he=use_he, he_config=he_config
         )

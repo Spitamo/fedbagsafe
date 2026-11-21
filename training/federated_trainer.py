@@ -5,7 +5,6 @@ import gc
 from typing import Dict, List 
 from training.local_trainer import LocalTrainer
 from training.aggregation import (
-    selective_weighted_average_aggregation,
     random_client_selection
 )
 from evaluation.evaluator import ModelEvaluator
@@ -63,7 +62,7 @@ class FederatedTrainer:
         
         init_acc = evaluator.evaluate(global_model, data_info['dataloaders']['eval_loader'])
         init_loss = evaluator.compute_loss(global_model, data_info['dataloaders']['eval_loader'])
-        best_score_prev = init_acc / max(init_loss, 1e-12)
+        best_score_prev = init_acc / max(init_loss, 1e-12) 
 
         for round_id in range(self.config.federated.n_rounds):
             attack_state = attack_schedule[round_id]
