@@ -3,12 +3,10 @@ import logging
 from copy import deepcopy
 import gc
 from typing import Dict, List 
-
 from training.local_trainer import LocalTrainer
 from training.aggregation import (
     selective_weighted_average_aggregation,
-    random_client_selection,
-    real_random_client_selection
+    random_client_selection
 )
 from evaluation.evaluator import ModelEvaluator
 
@@ -83,36 +81,21 @@ class FederatedTrainer:
             )
 
             # aggregation
-            if self.config.aggregation.selection_strategy == 'deterministic':
-                aggregated_models = random_client_selection(
-                    node_models,
-                    global_model,
-                    self.config.dataset.mode,
-                    self.config.federated.n_nodes,
-                    use_he=self.config.encryption.enabled,
-                    he_config={
-                        'poly_modulus_degree': 
-                            self.config.encryption.poly_modulus_degree,
-                        'coeff_mod_bit_sizes':
-                            self.config.encryption.coeff_mod_bit_sizes,
-                        'global_scale': self.config.encryption.global_scale
-                    } if self.config.encryption.enabled else None
-                )
-            else:
-                aggregated_models = real_random_client_selection(
-                    node_models,
-                    global_model,
-                    self.config.dataset.mode,
-                    self.config.federated.n_nodes,
-                    use_he=self.config.encryption.enabled,
-                    he_config={
-                        'poly_modulus_degree':
-                            self.config.encryption.poly_modulus_degree,
-                        'coeff_mod_bit_sizes':
-                            self.config.encryption.coeff_mod_bit_sizes,
-                        'global_scale': self.config.encryption.global_scale
-                    } if self.config.encryption.enabled else None
-                )
+            
+            aggregated_models = random_client_selection(
+                node_models,
+                global_model,
+                self.config.dataset.mode,
+                self.config.federated.n_nodes,
+                use_he=self.config.encryption.enabled,
+                he_config={
+                    'poly_modulus_degree':
+                        self.config.encryption.poly_modulus_degree,
+                    'coeff_mod_bit_sizes':
+                        self.config.encryption.coeff_mod_bit_sizes,
+                    'global_scale': self.config.encryption.global_scale
+                } if self.config.encryption.enabled else None
+            )
 
             del node_models
             gc.collect()
