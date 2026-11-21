@@ -55,7 +55,7 @@ encryption:
 aggregation:
   mode: 'weighted_average'  # weighted_average
   he_enabled: false  # 0verride encryption.enabled if specified
-  selection_strategy: 'random'  # random, deterministic
+  selection_strategy: 'random'  # uniform random
 
 # device Configuration
 device:
