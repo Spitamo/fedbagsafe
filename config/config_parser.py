@@ -25,8 +25,8 @@ class FederatedConfig:
     n_nodes: int
     n_rounds: int
     samples_per_client: int
-    min_samples: int
-    max_samples: int
+    min_samples: Optional[int]
+    max_samples: Optional[int]
     local_epochs: int
     fail_safe_alpha: float
 

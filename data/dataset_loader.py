@@ -4,8 +4,7 @@ import torchvision
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from typing import Tuple
-
+from typing import Tuple, Optional
 from data.dataset_modes import DatasetMode
 from data.data_utils import (
     create_class_pools,
@@ -154,24 +153,32 @@ class DatasetFactory:
         'cifar100': {
             'n_classes': 100,
             'samples_per_client': 400,
+            'min_samples': 20,
+            'max_samples': 40,
             'client_indices': (0, 40000),
             'central_indices': (40000, 50000),
         },
         'cifar10': {
             'n_classes': 10,
             'samples_per_client': 400,
+            'min_samples': 20,
+            'max_samples': 40,
             'client_indices': (0, 40000),
             'central_indices': (40000, 50000),
         },
         'fashionmnist': {
             'n_classes': 10,
             'samples_per_client': 400,
+            'min_samples': 20,
+            'max_samples': 40,
             'client_indices': (0, 40000),
             'central_indices': (40000, 60000),
         },
         'femnist': {
             'n_classes': 62,
             'samples_per_client': 5000,
+            'min_samples': 80,
+            'max_samples': 90,
             'client_indices': (0, 500000),
             'central_indices': (500000, 671585),
         }
@@ -229,14 +236,16 @@ class DatasetFactory:
         dataset_mode: str,
         n_nodes: int,
         n_rounds: int,
-        min_samples: int,
-        max_samples: int,
+        min_samples: Optional[int] = None,
+        max_samples: Optional[int] = None,
         root: str = '.'
     ):
         """prepare federated learning data"""
         config = DatasetFactory.DATASET_CONFIGS[dataset_mode]
         n_classes = config['n_classes']
         samples_per_client = config['samples_per_client']
+        min_samples = min_samples if min_samples is not None else config['min_samples']
+        max_samples = max_samples if max_samples is not None else config['max_samples']
         client_start, client_end = config['client_indices']
         central_start, central_end = config['central_indices']
 

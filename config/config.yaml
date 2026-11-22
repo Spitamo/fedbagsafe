@@ -18,10 +18,10 @@ federated:
   n_nodes: 100
   n_rounds: 100
   samples_per_client: 400
-  min_samples: 20
-  max_samples: 40
+  min_samples: null
+  max_samples: null
   local_epochs: 1
-  fail_safe_alpha: 0.95
+  fail_safe_alpha: 0.98
 
 # training Configuration
 training:
@@ -63,7 +63,7 @@ device:
   type: 'cpu'          # manual ops (notebook: HW = 'cpu')
   accelerator: 'cuda'  # lightning Trainers (notebook: accelerator = 'cuda')
   devices: 'auto'      # set to 1 on multi-GPU machines
-  
+
 # logging Configuration
 logging:
   level: 'INFO'
