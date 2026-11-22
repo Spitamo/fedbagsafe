@@ -30,7 +30,7 @@ def uniform_average_aggregation(
     averaged_params = {
         key: torch.mean(
             torch.stack([
-                node_model.state_dict()[key].float()
+                node_model.state_dict()[key].to('cpu').float()
                 for node_model in node_models
             ]),
             dim=0
