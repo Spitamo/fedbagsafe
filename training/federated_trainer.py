@@ -7,6 +7,7 @@ from training.local_trainer import LocalTrainer
 from training.aggregation import (
     random_client_selection
 )
+from training.attack_schedule import NOTEBOOK_SCHEDULE
 from evaluation.evaluator import ModelEvaluator
 
 
@@ -19,36 +20,10 @@ class FederatedTrainer:
         self.logger = logging.getLogger(__name__)
 
     def get_attack_schedule(self) -> List[str]:
-        """generate attack schedule based on phases"""
-        phases = self.config.phases
-        schedule = []
-
-        # Phase 1: Stable Initialization
-        schedule.extend(['benign'] * phases.stable_initialization)
-
-        # Phase 2: Gradual Attack Introduction
-        attack_sequence = ['benign', 'benign', 'backdoor', 'benign', 'benign',
-                          'labelflip', 'benign', 'benign', 'modelpoisoning',
-                          'benign']
-        schedule.extend((attack_sequence * 2)[:phases.gradual_attack_introduction])
-
-        # Phase 3: Moderate Attack Frequency
-        attack_sequence_moderate = ['benign', 'backdoor', 'benign',
-                                   'modelpoisoning', 'benign', 'labelflip']
-        schedule.extend((attack_sequence_moderate * 5)[:phases.moderate_attack_frequency])
-
-        # Phase 4: High-Intensity Attacks
-        attack_sequence_intense = ['backdoor', 'modelpoisoning', 'labelflip']
-        schedule.extend((attack_sequence_intense * 10)[:phases.high_intensity_attacks])
-
-        # Phase 5: Consecutive Attack Stress Test
-        stress_sequence = ['backdoor', 'modelpoisoning', 'labelflip']
-        schedule.extend((stress_sequence * 4)[:phases.consecutive_attack_stress_test])
-
-        # Phase 6: Recovery
-        schedule.extend(['benign'] * phases.recovery_and_final_validation)
-
-        return schedule[:self.config.federated.n_rounds]
+        """return exact per-round attack schedule from the final paper notebook."""
+        if not self.config.attack.enabled:
+            return ['benign'] * self.config.federated.n_rounds
+        return list(NOTEBOOK_SCHEDULE)[:self.config.federated.n_rounds]
 
     
 
