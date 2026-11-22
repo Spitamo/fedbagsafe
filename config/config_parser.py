@@ -61,8 +61,11 @@ class AggregationConfig:
     selection_strategy: str
 
 @dataclass
+@dataclass
 class DeviceConfig:
     type: str
+    accelerator: str = 'cuda'
+    devices: Any = 'auto'
 
 @dataclass
 class LoggingConfig:

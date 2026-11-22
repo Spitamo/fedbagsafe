@@ -62,7 +62,8 @@ class LocalTrainer:
                 enable_model_summary=False,
                 gradient_clip_val=self.config.training.gradient_clip,
                 max_epochs=self.config.federated.local_epochs,
-                accelerator='cpu',
+                accelerator=self.config.device.accelerator,
+                devices=self.config.device.devices,
             )
 
             trainer.fit(node_model, client_loader,
@@ -80,7 +81,7 @@ class LocalTrainer:
                         ).to(param.device)
                         param.add_(noise)
 
-            node_model = node_model.to('cpu')
+            node_model = node_model.to(self.device)
             torch.cuda.empty_cache()
             gc.collect()
 

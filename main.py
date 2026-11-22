@@ -22,7 +22,7 @@ def main():
     cli_updates = process_cli_args(args)
     config = ConfigParser.parse(args.config, **cli_updates)
 
-   
+    torch.set_float32_matmul_precision('medium')
     seed_everything(config.seed)
     device = get_device(config.device.type)
     logger = setup_logging(

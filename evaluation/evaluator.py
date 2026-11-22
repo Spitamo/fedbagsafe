@@ -26,7 +26,8 @@ class ModelEvaluator:
             enable_checkpointing=False,
             enable_progress_bar=False,
             enable_model_summary=False,
-            accelerator='cpu',
+            accelerator=self.config.device.accelerator,
+            devices=self.config.device.devices,
         )
 
         test_result = trainer.test(model, dataloaders=dataloader, verbose=False)

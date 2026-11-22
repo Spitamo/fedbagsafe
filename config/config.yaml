@@ -58,9 +58,12 @@ aggregation:
   selection_strategy: 'random'  # uniform random
 
 # device Configuration
+# device Configuration
 device:
-  type: 'cpu'  # cpu, cuda
-
+  type: 'cpu'          # manual ops (notebook: HW = 'cpu')
+  accelerator: 'cuda'  # lightning Trainers (notebook: accelerator = 'cuda')
+  devices: 'auto'      # set to 1 on multi-GPU machines
+  
 # logging Configuration
 logging:
   level: 'INFO'
