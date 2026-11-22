@@ -83,14 +83,31 @@ class CustomDataset(Dataset):
     def _create_flip_mapping(self, unique_classes, n_classes):
         """create label flip mapping"""
         flip_mapping = {}
-        priority_pairs = [(1, 9), (6, 4)]
+        if n_classes >= 2:
+            num_flips = max(1, min(2, n_classes // 2))
+            priority_pairs = [(1, 9), (6, 4)]
 
-        for from_class, to_class in priority_pairs:
-            if (from_class in unique_classes and
-                to_class in unique_classes and
-                len(flip_mapping) < 2):
-                flip_mapping[from_class] = to_class
+            for from_class, to_class in priority_pairs:
+                if (from_class in unique_classes and
+                    to_class in unique_classes and
+                    len(flip_mapping) < num_flips):
+                    flip_mapping[from_class] = to_class
 
+            while len(flip_mapping) < num_flips:
+                remaining_classes = [c for c in unique_classes if c not in flip_mapping]
+                if len(remaining_classes) < 2:
+                    break
+                from_class = np.random.choice(remaining_classes)
+                remaining_classes.remove(from_class)
+                available_targets = [
+                    c for c in remaining_classes
+                    if c not in flip_mapping.values()
+                ]
+                if available_targets:
+                    to_class = np.random.choice(available_targets)
+                    flip_mapping[from_class] = to_class
+
+        # print(f"Label Flip Mapping: {flip_mapping}")
         return flip_mapping
 
     def __len__(self):
@@ -109,12 +126,13 @@ class CustomDataset(Dataset):
                 image = image / 255.0
 
         # apply attacks
+        # apply attacks
         if self.mode == DatasetMode.MIXED_BACKDOOR and idx % 2:
-            image[:, [5, 6, 7], [5, 6, 7]] = 0
+            image[:, [5, 5, 5, 6, 6, 6, 7, 7, 7], [5, 6, 7, 5, 6, 7, 5, 6, 7]] = 0
             label = 9
 
         elif self.mode == DatasetMode.FULL_BACKDOOR:
-            image[:, [5, 6, 7], [5, 6, 7]] = 0
+            image[:, [5, 5, 5, 6, 6, 6, 7, 7, 7], [5, 6, 7, 5, 6, 7, 5, 6, 7]] = 0
             label = 9
 
         elif self.mode == DatasetMode.LABEL_FLIP and np.random.random() < 0.3:
@@ -321,6 +339,8 @@ def create_dataloaders(
     target_label: int = 9
 ):
     """create data loaders for training"""
+    use_pin_memory = torch.cuda.is_available()
+    worker_kwargs = {'persistent_workers': False, 'prefetch_factor': 1} if num_workers > 0 else {}
     attack_configs = {
         'clean': DatasetMode.CLEAN,
         'backdoor': {i: DatasetMode.MIXED_BACKDOOR if i < 24 else DatasetMode.CLEAN
@@ -348,7 +368,7 @@ def create_dataloaders(
                     shuffle=True,
                     num_workers=num_workers,
                     drop_last=True,
-                    pin_memory=True
+                    pin_memory=use_pin_memory
                 )
                 round_loaders.append(loader)
             result_loaders.append(round_loaders)
@@ -362,22 +382,26 @@ def create_dataloaders(
         shuffle=True,
         num_workers=num_workers,
         drop_last=True,
-        pin_memory=True
+        pin_memory=use_pin_memory
+        , **worker_kwargs
     )
 
     # evaluation loader
     if dataset_mode == 'femnist':
         eval_size = 7000
+        actual_eval_batch_size = 100
     else:
         eval_size = 600
+        actual_eval_batch_size = eval_batch_size
 
     eval_loader = DataLoader(
         CustomDataset(test_data[:eval_size], test_labels[:eval_size],
                      mode=DatasetMode.CLEAN),
-        batch_size=eval_batch_size,
+        batch_size=actual_eval_batch_size,
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=use_pin_memory,
+        **worker_kwargs
     )
 
     # backdoor test loader
@@ -388,10 +412,11 @@ def create_dataloaders(
             np.array(test_labels)[clean_label_mask][:600],
             mode=DatasetMode.FULL_BACKDOOR
         ),
-        batch_size=eval_batch_size,
+        batch_size=100,
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=True
+        pin_memory=use_pin_memory,
+        **worker_kwargs
     )
 
     return {
