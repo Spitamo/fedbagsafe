@@ -37,6 +37,7 @@ class ModelFactory:
             raise ValueError(f"Unknown model: {model_name}")
 
     @staticmethod
+    @staticmethod
     def load_pretrained_model(
         model_name: str,
         dataset_mode: str,
@@ -52,47 +53,36 @@ class ModelFactory:
             checkpoint_dir
         )
 
-        if checkpoint_path and os.path.exists(checkpoint_path):
-            try:
-                if checkpoint_path.endswith('.ckpt'):
-                    if dataset_mode == 'femnist':
-                        from models.resnet9_femnist import ResNet9Femnist
-                        model = _load_lightning_checkpoint(
-                            ResNet9Femnist,
-                            checkpoint_path,
-                            num_classes,
-                            dropout
-                        )
-                    elif dataset_mode == 'fashionmnist':
-                        from models.resnet9_fashionmnist import ResNet9FashionMNIST
-                        model = _load_lightning_checkpoint(
-                            ResNet9FashionMNIST,
-                            checkpoint_path,
-                            num_classes,
-                            dropout
-                        )
-                    elif dataset_mode in ['cifar10', 'cifar100']:
-                        model = _load_lightning_checkpoint(
-                            CIFARResNet,
-                            checkpoint_path,
-                            num_classes,
-                            dropout
-                        )
-                else:
-                    state_dict = torch.load(checkpoint_path, map_location='cpu')
-                    model.load_state_dict(state_dict)
+        if not checkpoint_path or not os.path.exists(checkpoint_path):
+            raise FileNotFoundError(f"Checkpoint not found at {checkpoint_path}")
 
-                print(f" Loaded pretrained model from {checkpoint_path}")
-                return model
-
-            except Exception as e:
-                print(f" Failed to load checkpoint from {checkpoint_path}: {e}")
-                print(" Using randomly initialized model instead")
-                return model
+        if checkpoint_path.endswith('.ckpt'):
+            if dataset_mode == 'femnist':
+                from models.resnet9_femnist import ResNet9Femnist
+                model = _load_lightning_checkpoint(
+                    ResNet9Femnist,
+                    checkpoint_path,
+                    num_classes
+                )
+            elif dataset_mode == 'fashionmnist':
+                from models.resnet9_fashionmnist import ResNet9FashionMNIST
+                model = _load_lightning_checkpoint(
+                    ResNet9FashionMNIST,
+                    checkpoint_path,
+                    num_classes
+                )
+            elif dataset_mode in ['cifar10', 'cifar100']:
+                model = _load_lightning_checkpoint(
+                    CIFARResNet,
+                    checkpoint_path,
+                    num_classes
+                )
         else:
-            print(f" Checkpoint not found at {checkpoint_path}")
-            print(" Using randomly initialized model instead")
-            return model
+            state_dict = torch.load(checkpoint_path, map_location='cpu')
+            model.load_state_dict(state_dict)
+
+        print(f"Loaded pretrained model from {checkpoint_path}")
+        return model
 
     @staticmethod
     def _get_checkpoint_path(dataset_mode: str, checkpoint_dir: str) -> str:
@@ -122,17 +112,18 @@ class ModelFactory:
         
         if dataset_mode in ['cifar10', 'cifar100']:
             return [
-                "features.7.0.conv1.weight", "features.7.0.bn1.weight", "features.7.0.bn1.bias",
-                "features.7.0.conv2.weight", "features.7.0.bn2.weight", "features.7.0.bn2.bias",
-                "features.7.0.conv3.weight", "features.7.0.bn3.weight", "features.7.0.bn3.bias",
-                "features.7.0.downsample.0.weight", "features.7.0.downsample.1.weight", "features.7.0.downsample.1.bias",
-                "features.7.1.conv1.weight", "features.7.1.bn1.weight", "features.7.1.bn1.bias",
-                "features.7.1.conv2.weight", "features.7.1.bn2.weight", "features.7.1.bn2.bias",
-                "features.7.1.conv3.weight", "features.7.1.bn3.weight", "features.7.1.bn3.bias",
-                "features.7.2.conv1.weight", "features.7.2.bn1.weight", "features.7.2.bn1.bias",
-                "features.7.2.conv2.weight", "features.7.2.bn2.weight", "features.7.2.bn2.bias",
-                "features.7.2.conv3.weight", "features.7.2.bn3.weight", "features.7.2.bn3.bias",
-                "fc.1.weight", "fc.1.bias"
+                "features.7.0.conv1.weight",
+                "features.7.0.conv2.weight",
+                "features.7.0.conv3.weight",
+                "features.7.0.downsample.0.weight",
+                "features.7.1.conv1.weight",
+                "features.7.1.conv2.weight",
+                "features.7.1.conv3.weight",
+                "features.7.2.conv1.weight",
+                "features.7.2.conv2.weight",
+                "features.7.2.conv3.weight",
+                "fc.1.weight",
+                "fc.1.bias",
             ]
         elif dataset_mode == 'femnist':
             return [
@@ -197,16 +188,11 @@ def _load_lightning_checkpoint(
     model_class,
     checkpoint_path: str,
     num_classes: int,
-    dropout: float = 0.3
+    map_location: str = 'cpu'
 ):
-    """lod PyTorch Lightning checkpoint"""
-    try:
-        model = model_class.load_from_checkpoint(
-            checkpoint_path,
-            num_classes=num_classes,
-            dropout=dropout
-        )
-        return model
-    except Exception as e:
-        print(f"Error loading Lightning checkpoint: {e}")
-        return model_class(num_classes=num_classes, dropout=dropout)
+    """Load PyTorch Lightning checkpoint"""
+    return model_class.load_from_checkpoint(
+        checkpoint_path,
+        num_classes=num_classes,
+        map_location=map_location
+    )
