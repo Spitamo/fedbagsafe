@@ -40,28 +40,13 @@ class ResNet9Femnist(ImageClassificationBase):
 
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Dropout(dropout),
+            nn.Dropout(0.3),
             nn.Linear(256, 128),
             nn.ReLU(inplace=True),
-            nn.Dropout(dropout * 0.75),
+            nn.Dropout(0.2),
             nn.Linear(128, num_classes)
         )
 
-        self._init_weights()
-
-    def _init_weights(self):
-        """Initialize weights"""
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', 
-                                       nonlinearity='relu')
-            elif isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                nn.init.xavier_normal_(m.weight)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         out = self.conv1(x)
