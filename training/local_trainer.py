@@ -37,7 +37,7 @@ class LocalTrainer:
             )
             node_model = node_model.to(self.device)
 
-            client_status = ('Attack' if client_id < 24 and 
+            client_status = ('Attack' if client_id < self.config.attack.malicious_clients and 
                         attack_state != 'benign' else 'Normal')
             self.logger.info(
                 f"Fine-tuning Node {client_id} [{client_status}] | "
@@ -70,7 +70,7 @@ class LocalTrainer:
                     dataloader_map['eval_loader'])
 
             # apply model poisoning noise if needed
-            if client_id < 24 and attack_state == 'modelpoisoning':
+            if client_id < self.config.attack.malicious_clients and attack_state == 'modelpoisoning':
                 self.logger.info("Applying model poisoning noise")
                 with torch.no_grad():
                     for param in node_model.parameters():

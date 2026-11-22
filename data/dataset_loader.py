@@ -345,19 +345,20 @@ def create_dataloaders(
     batch_size: int,
     eval_batch_size: int,
     num_workers: int,
-    target_label: int = 9
+    target_label: int = 9,
+    malicious_clients: int = 24
 ):
     """create data loaders for training"""
     use_pin_memory = torch.cuda.is_available()
     worker_kwargs = {'persistent_workers': False, 'prefetch_factor': 1} if num_workers > 0 else {}
     attack_configs = {
         'clean': DatasetMode.CLEAN,
-        'backdoor': {i: DatasetMode.MIXED_BACKDOOR if i < 24 else DatasetMode.CLEAN
-                    for i in range(n_nodes)},
-        'model_poison': {i: DatasetMode.MODEL_POISONING if i < 24 else DatasetMode.CLEAN
-                        for i in range(n_nodes)},
-        'label_flip': {i: DatasetMode.LABEL_FLIP if i < 24 else DatasetMode.CLEAN
-                      for i in range(n_nodes)}
+        'backdoor': {i: DatasetMode.MIXED_BACKDOOR if i < malicious_clients else DatasetMode.CLEAN
+                     for i in range(n_nodes)},
+        'model_poison': {i: DatasetMode.MODEL_POISONING if i < malicious_clients else DatasetMode.CLEAN
+                         for i in range(n_nodes)},
+        'label_flip': {i: DatasetMode.LABEL_FLIP if i < malicious_clients else DatasetMode.CLEAN
+                       for i in range(n_nodes)}
     }
 
     # create round dataloaders

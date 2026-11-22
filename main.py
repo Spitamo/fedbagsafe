@@ -69,7 +69,8 @@ def main():
         config.training.batch_size,
         config.training.eval_batch_size,
         config.training.num_workers,
-        config.attack.target_label
+        config.attack.target_label,
+        config.attack.malicious_clients
     )
 
     # create or load model
@@ -89,6 +90,7 @@ def main():
         global_model = ModelFactory.create_model(
             config.model.name,
             fed_data['n_classes'],
+            config.dataset.mode,
             config.model.dropout
         )
     

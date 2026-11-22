@@ -247,31 +247,33 @@ def process_cli_args(args) -> Dict[str, Any]:
     if args.model:
         updates['model'] = {'name': args.model}
 
-    if args.n_nodes or args.n_rounds or args.malicious_clients:
-        updates['federated'] = {}
+    if args.n_nodes or args.n_rounds or args.epochs:
+        updates.setdefault('federated', {})
         if args.n_nodes:
             updates['federated']['n_nodes'] = args.n_nodes
         if args.n_rounds:
             updates['federated']['n_rounds'] = args.n_rounds
-        if args.malicious_clients:
-            updates['federated']['malicious_clients'] = args.malicious_clients
+        if args.epochs:
+            updates['federated']['local_epochs'] = args.epochs
 
-    if args.batch_size or args.lr or args.epochs:
-        updates['training'] = {}
+    if args.batch_size or args.lr:
+        updates.setdefault('training', {})
         if args.batch_size:
             updates['training']['batch_size'] = args.batch_size
         if args.lr:
             updates['training']['learning_rate'] = args.lr
-        if args.epochs:
-            updates['training']['local_epochs'] = args.epochs
 
     if args.enable_he or args.disable_he:
         updates['encryption'] = {'enabled': args.enable_he}
-        updates['aggregation'] = {'he_enabled': args.enable_he}
+        updates.setdefault('aggregation', {})
+        updates['aggregation']['he_enabled'] = args.enable_he
 
-    if args.disable_attacks or args.enable_attacks:
-        updates['attack'] = {'enabled': args.enable_attacks}
-
+    if args.disable_attacks or args.enable_attacks or args.malicious_clients is not None:
+        updates.setdefault('attack', {})
+        if args.disable_attacks or args.enable_attacks:
+            updates['attack']['enabled'] = args.enable_attacks
+        if args.malicious_clients is not None:
+            updates['attack']['malicious_clients'] = args.malicious_clients
     if args.device:
         updates['device'] = {'type': args.device}
 
