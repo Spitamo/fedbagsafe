@@ -94,13 +94,11 @@ def main():
     
     global_model = global_model.to(device)
 
-    # initial model evaluation (pretrained model)
+    # initial model evaluation (pretrained model — single pass to match notebook RNG)
     evaluator = ModelEvaluator(config, device)
     logger.info("Testing initial pretrained model...")
     initial_model_acc = evaluator.evaluate(global_model, dataloaders['eval_loader'])
-    initial_model_backdoor = evaluator.evaluate(global_model, dataloaders['backdoor_loader'])
     logger.info(f"Initial Model Accuracy: {initial_model_acc:.4f}")
-    logger.info(f"Initial Backdoor Success Rate: {initial_model_backdoor:.4f}")
 
     # prepare data info
     data_info = {
@@ -114,6 +112,10 @@ def main():
     final_model = trainer.train(data_info, global_model)
 
     logger.info("Training completed!")
+
+    # evaluate initial backdoor rate after training 
+    initial_model_backdoor = evaluator.evaluate(global_model, dataloaders['backdoor_loader'])
+    logger.info(f"Initial Backdoor Success Rate: {initial_model_backdoor:.4f}")
 
     # final evaluation
     logger.info("=" * 80)
