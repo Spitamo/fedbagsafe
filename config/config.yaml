@@ -77,7 +77,7 @@ checkpoint:
 # random Seed
 seed: 42
 
-# framwork phases
+# legacy
 phases:
   stable_initialization: 10
   gradual_attack_introduction: 15
