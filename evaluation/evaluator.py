@@ -15,7 +15,7 @@ class ModelEvaluator:
     def evaluate(self, model, dataloader):
         """evaluate model accuracy"""
         model = model.to(self.device)
-        model.eval()
+        # model.eval()
 
         logger = logging.getLogger("pytorch_lightning")
         old_level = logger.level
