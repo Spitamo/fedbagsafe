@@ -59,7 +59,7 @@ class ImageClassificationBase(pl.LightningModule):
             mode='min',
             factor=0.5,
             patience=3,
-            verbose=True,
+            # verbose=True,
             threshold=1e-4,
             min_lr=1e-5
         )

@@ -37,7 +37,6 @@ class ModelFactory:
             raise ValueError(f"Unknown model: {model_name}")
 
     @staticmethod
-    @staticmethod
     def load_pretrained_model(
         model_name: str,
         dataset_mode: str,

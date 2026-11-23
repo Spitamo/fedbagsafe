@@ -27,7 +27,7 @@ federated:
 training:
   batch_size: 8
   eval_batch_size: 64
-  num_workers: 8
+  num_workers: 0
   learning_rate: 5e-5
   weight_decay: 1e-2
   gradient_clip: 1.0
@@ -61,7 +61,7 @@ aggregation:
 # device Configuration
 device:
   type: 'cpu'          # manual ops (notebook: HW = 'cpu')
-  accelerator: 'cuda'  # lightning Trainers (notebook: accelerator = 'cuda')
+  accelerator: 'cpu'  # lightning Trainers (notebook: accelerator = 'cuda')
   devices: 'auto'      # set to 1 on multi-GPU machines
 
 # logging Configuration
