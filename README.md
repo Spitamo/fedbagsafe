@@ -122,7 +122,7 @@ Evaluated across **100 communication rounds** with **$N=100$ participating clien
 ├── training/
 │   ├── federated_trainer.py    # Main FL loop & phase scheduler
 │   ├── local_trainer.py        # Client-side training logic
-│   └── aggregation.py          # Bagging & Selective weighted average
+│   └── aggregation.py          # Bagging & Selective uniform average
 ├── utils/
 │   ├── logging_utils.py        # Verbose and file logging
 │   ├── seed_utils.py           # Reproducibility constraints
