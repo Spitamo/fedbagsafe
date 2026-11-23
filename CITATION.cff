@@ -1,0 +1,62 @@
+cff-version: 1.2.0
+type: software
+message: "If you use FedBagSafe in your research, please cite the accompanying Computers and Electrical Engineering article."
+title: "FedBagSafe: Official PyTorch Framework for Byzantine-Robust and Privacy-Preserving Personalized Federated Learning"
+version: "1.0.0"
+date-released: "2026-11-23"
+abstract: >-
+  FedBagSafe is an open-source PyTorch framework created and maintained by
+  Seyed Saeed Razavi for Byzantine-robust, privacy-preserving, and personalized
+  federated learning under non-IID data. It is the official implementation of
+  the FedBagSafe article in Computers and Electrical Engineering, which builds
+  on the design of LightFedSelect (Razavi et al., IEEE ICCKE 2025, DOI:
+  10.1109/ICCKE68588.2025.11273877). The framework provides server-side bagged
+  multi-aggregation, client-side accuracy-over-loss selection, adaptive
+  fail-safe rollback, and optional TenSEAL CKKS homomorphic encryption across
+  CIFAR-10, CIFAR-100, FashionMNIST, and FEMNIST.
+authors:
+  - family-names: "Razavi"
+    given-names: "Seyed Saeed"
+    email: "razavi.saeed@outlook.com"
+    affiliation: "University of Guilan"
+    orcid: "https://orcid.org/0009-0001-1675-5358"
+    alias: "Spitamo"
+repository-code: "https://github.com/Spitamo/fedbagsafe"
+url: "https://github.com/Spitamo/fedbagsafe"
+license: MIT
+keywords:
+  - FedBagSafe
+  - Federated Learning
+  - Byzantine Robustness
+  - Backdoor Defense
+  - Model Poisoning
+  - Secure Aggregation
+  - Homomorphic Encryption
+  - CKKS
+  - Personalized Federated Learning
+  - Fail-Safe Aggregation
+  - Non-IID Data
+  - PyTorch
+  - LightFedSelect
+preferred-citation:
+  type: article
+  title: "FedBagSafe: Bagged adaptive selection and fail-safe aggregation for robust, privacy-preserving, and personalized Federated Learning"
+  authors:
+    - family-names: "Ebrahimi Atani"
+      given-names: "Reza"
+    - family-names: "Razavi"
+      given-names: "Seyed Saeed"
+      email: "razavi.saeed@outlook.com"
+      affiliation: "University of Guilan"
+      orcid: "https://orcid.org/0009-0001-1675-5358"
+    - family-names: "Dadashi Pakdeh"
+      given-names: "Soroosh"
+    - family-names: "Vasegh Rahimparvar"
+      given-names: "Arsalan"
+  journal: "Computers and Electrical Engineering"
+  volume: 141
+  start: 111669
+  year: 2027
+  issn: "0045-7906"
+  doi: "10.1016/j.compeleceng.2026.111669"
+  url: "https://doi.org/10.1016/j.compeleceng.2026.111669"
