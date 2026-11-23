@@ -61,7 +61,8 @@ class HomomorphicEncryption:
         """Enc model parameters"""
         enc_model = {}
         shapes = {}
-        sd = model.state_dict()
+        # sd = model.state_dict()
+        sd = model if isinstance(model, dict) else model.state_dict()
 
         for key in layers_to_aggregate:
             flat = sd[key].detach().cpu().float().contiguous().view(
