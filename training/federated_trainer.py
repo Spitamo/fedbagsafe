@@ -35,8 +35,8 @@ class FederatedTrainer:
         attack_schedule = self.get_attack_schedule()
         model = global_model
         
-        init_acc = evaluator.evaluate(global_model, data_info['dataloaders']['eval_loader'])
-        init_loss = evaluator.compute_loss(global_model, data_info['dataloaders']['eval_loader'])
+        init_acc = evaluator.evaluate(global_model, data_info['dataloaders']['selection_loader'])
+        init_loss = evaluator.compute_loss(global_model, data_info['dataloaders']['selection_loader'])
         best_score_prev = init_acc / max(init_loss, 1e-12) 
 
         for round_id in range(self.config.federated.n_rounds):
@@ -71,8 +71,8 @@ class FederatedTrainer:
                 } if self.config.encryption.enabled else None
             )
 
-            del node_models
-            gc.collect()
+            # del node_models
+            # gc.collect()
 
             # evaluation and Selection
             best_model_this_round = None
@@ -85,9 +85,9 @@ class FederatedTrainer:
                 )
 
                 acc = evaluator.evaluate(agg_model, 
-                                        data_info['dataloaders']['eval_loader'])
+                                        data_info['dataloaders']['selection_loader'])
                 loss = evaluator.compute_loss(agg_model,
-                                             data_info['dataloaders']['eval_loader'])
+                                             data_info['dataloaders']['selection_loader'])
                 score = acc / loss if loss > 0 else 0.0
 
                 self.logger.info(
@@ -110,7 +110,8 @@ class FederatedTrainer:
                 gc.collect()
 
 
-
+            del node_models
+            gc.collect()
             # fail-safe Mechanism
             best_score_prev = self.config.federated.fail_safe_alpha * best_score_prev
             if best_score_this_round > best_score_prev:
