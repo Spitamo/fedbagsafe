@@ -413,6 +413,15 @@ def create_dataloaders(
         pin_memory=use_pin_memory,
         **worker_kwargs
     )
+    selection_loader = DataLoader(
+        CustomDataset(test_data[eval_size:eval_size*2], test_labels[eval_size:eval_size*2],
+                     mode=DatasetMode.CLEAN),
+        batch_size=actual_eval_batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=use_pin_memory,
+        **worker_kwargs
+    )
 
     # backdoor test loader
     clean_label_mask = np.array(test_labels) != target_label
@@ -437,4 +446,5 @@ def create_dataloaders(
         'backdoor': dataloaders['nodes_backdoor_data_loaders'],
         'label_flip': dataloaders['nodes_label_flip_data_loaders'],
         'model_poisoning': dataloaders['nodes_model_poison_data_loaders'],
+        'selection_loader' : selection_loader
     }
