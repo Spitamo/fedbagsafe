@@ -26,6 +26,9 @@ class LocalTrainer:
     ) -> List:
         """train all clients for one round"""
         node_models = []
+        layers_to_keep = set(ModelFactory.get_layers_to_aggregate(
+            dataset_mode=self.config.dataset.mode
+        ))
 
         for client_id in range(self.config.federated.n_nodes):
             node_model = deepcopy(global_model)
@@ -66,6 +69,7 @@ class LocalTrainer:
                 devices=self.config.device.devices,
             )
 
+            node_model.train()
             trainer.fit(node_model, client_loader,
                     dataloader_map['eval_loader'])
 
@@ -81,10 +85,20 @@ class LocalTrainer:
                         ).to(param.device)
                         param.add_(noise)
 
-            node_model = node_model.to(self.device)
+            # node_model = node_model.to(self.device)
+            # torch.cuda.empty_cache()
+            # gc.collect()
+
+            # node_models.append(node_model)
+            head_state = {
+                k: v.detach().to('cpu').clone()
+                for k, v in node_model.state_dict().items()
+                if k in layers_to_keep
+            }
+            node_models.append(head_state)
+
+            del trainer, node_model
             torch.cuda.empty_cache()
             gc.collect()
-
-            node_models.append(node_model)
 
         return node_models
