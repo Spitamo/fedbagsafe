@@ -10,7 +10,7 @@ model:
   dropout: 0.3
   pretrained: true
   checkpoint_dir: './checkpoints' 
-  load_pretrained: False  
+  load_pretrained: True  
 
 
 #federated Learning Configuration
@@ -53,7 +53,7 @@ encryption:
 
 # aggregation Configuration
 aggregation:
-  mode: 'weighted_average'  # weighted_average
+  mode: 'uniform_average'  # uniform_average    ###############
   he_enabled: false  # 0verride encryption.enabled if specified
   selection_strategy: 'random'  # uniform random
 
