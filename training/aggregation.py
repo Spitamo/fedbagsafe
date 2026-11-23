@@ -14,34 +14,30 @@ def uniform_average_aggregation(
     use_he: bool = False,
     he_config: Dict = None
 ):
+    """aggregate models using uniform average (memory-efficient version)"""
     if use_he and he_config:
         from security.aggregation_he import aggregate_with_he
-        return aggregate_with_he(node_models, global_model, dataset_mode, 
-                                he_config)
+        return aggregate_with_he(node_models, global_model, dataset_mode, he_config)
 
     averaged_model = deepcopy(global_model)
-    
     layers_to_aggregate = ModelFactory.get_layers_to_aggregate(
         dataset_mode=dataset_mode
     )
-
     new_state_dict = averaged_model.state_dict()
+    num_models = len(node_models)
 
-    averaged_params = {
-        key: torch.mean(
-            torch.stack([
-                node_model.state_dict()[key].to('cpu').float()
-                for node_model in node_models
-            ]),
-            dim=0
-        )
-        for key in layers_to_aggregate
-    }
-
-    for key in layers_to_aggregate:
-        new_state_dict[key] = averaged_params[key].to(
-            new_state_dict[key].dtype
-        )
+    with torch.no_grad():
+        for key in layers_to_aggregate:
+            acc = None
+            for node_model in node_models:
+                sd = node_model if isinstance(node_model, dict) else node_model.state_dict()
+                tensor = sd[key].detach().to('cpu', dtype=torch.float32)
+                if acc is None:
+                    acc = tensor.clone()
+                else:
+                    acc.add_(tensor)
+            acc.div_(num_models)
+            new_state_dict[key] = acc.to(new_state_dict[key].dtype)
 
     averaged_model.load_state_dict(new_state_dict)
     return averaged_model
@@ -54,29 +50,20 @@ def random_client_selection(
     n_nodes: int,
     use_he: bool = False,
     he_config: Dict = None
-) -> List[Tuple]:
-    
-    """uniform random client selection"""
-    
-    aggregated_models = []
-
+):
+    """YIELd bagged aggregated models one at a time to prevent OOM."""
+    all_selected = []
     for _ in range(int(1 / 3 * n_nodes)):
-        
-        selected_indices = random.sample(
-            range(n_nodes),
-            int(2 / 3 * n_nodes)
-        )
 
+        all_selected.append(random.sample(range(n_nodes), int(2 / 3 * n_nodes)))
+
+    for selected_indices in all_selected:
         selected_models = [node_models[idx] for idx in selected_indices]
-
         agg_model = uniform_average_aggregation(
             selected_models, global_model, dataset_mode,
             use_he=use_he, he_config=he_config
         )
-        aggregated_models.append((agg_model, selected_indices))
-
         del selected_models
+        yield agg_model, selected_indices
         torch.cuda.empty_cache()
         gc.collect()
-
-    return aggregated_models
