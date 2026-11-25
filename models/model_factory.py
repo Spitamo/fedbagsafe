@@ -1,15 +1,15 @@
-import torch
 import os
-from pathlib import Path
-from models.resnet9 import ResNet9
+
+import torch
+
 from models.cifar_resnet import CIFARResNet
-import pytorch_lightning as pl
+from models.resnet9 import ResNet9
 
 
 class ModelFactory:
-    """Factory for creating and loading models"""
+    """factory for creating and loading models"""
 
-    CHECKPOINT_PATHS = {
+    CHECKPOINT_PATHS = {  # noqa: RUF012
         'femnist': 'femnist-stable-epoch=05-val_acc=0.67.ckpt',
         'fashionmnist': 'fashionmnist1.ckpt',
         'cifar100': 'cifar100.ckpt',
@@ -17,9 +17,9 @@ class ModelFactory:
     }
 
     @staticmethod
-    def create_model(model_name: str, num_classes: int, 
-                    dataset_mode: str = None, dropout: float = 0.3):
-        """Create model based on name and dataset"""
+    def create_model(model_name: str, num_classes: int,
+                     dataset_mode: str = None, dropout: float = 0.3):
+        """create model based on name and dataset"""
         if model_name == 'resnet9':
             if dataset_mode == 'femnist':
                 from models.resnet9_femnist import ResNet9Femnist
@@ -44,9 +44,7 @@ class ModelFactory:
         checkpoint_dir: str = './checkpoints',
         dropout: float = 0.3
     ):
-        """Load pretrained model from checkpoint"""
-        model = ModelFactory.create_model(model_name, num_classes, dataset_mode, dropout)
-
+        """load pretrained model from checkpoint"""
         checkpoint_path = ModelFactory._get_checkpoint_path(
             dataset_mode,
             checkpoint_dir
@@ -76,8 +74,20 @@ class ModelFactory:
                     checkpoint_path,
                     num_classes
                 )
+            else:
+                model = _load_lightning_checkpoint(
+                    ResNet9,
+                    checkpoint_path,
+                    num_classes
+                )
         else:
-            state_dict = torch.load(checkpoint_path, map_location='cpu')
+            model = ModelFactory.create_model(
+                model_name,
+                num_classes,
+                dataset_mode,
+                dropout
+            )
+            state_dict = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
             model.load_state_dict(state_dict)
 
         print(f"Loaded pretrained model from {checkpoint_path}")
@@ -85,7 +95,7 @@ class ModelFactory:
 
     @staticmethod
     def _get_checkpoint_path(dataset_mode: str, checkpoint_dir: str) -> str:
-        """Get checkpoint path for dataset"""
+        """get checkpoint path for dataset"""
         checkpoint_name = ModelFactory.CHECKPOINT_PATHS.get(dataset_mode)
 
         if not checkpoint_name:
@@ -105,10 +115,10 @@ class ModelFactory:
 
     @staticmethod
     def get_layers_to_freeze(model_name: str = None, dataset_mode: str = None):
-        """Get layers to freeze - based primarily on dataset_mode"""
+        """get trainable head layers kept unfrozen per dataset"""
         if not dataset_mode:
             return []
-        
+
         if dataset_mode in ['cifar10', 'cifar100']:
             return [
                 "features.7.0.conv1.weight",
@@ -131,46 +141,41 @@ class ModelFactory:
                 "res2.0.0.weight", "res2.0.1.weight", "res2.0.1.bias",
                 "res2.1.0.weight", "res2.1.1.weight", "res2.1.1.bias",
                 "classifier.2.weight", "classifier.2.bias",
-                "classifier.5.weight", "classifier.5.bias"  
+                "classifier.5.weight", "classifier.5.bias",
             ]
         elif dataset_mode == 'fashionmnist':
             return [
                 "conv4.0.weight",
-    "conv4.1.weight",
-    "conv4.1.bias",
-    
-    "res2.0.0.weight",
-    "res2.0.1.weight",
-    "res2.0.1.bias",
-    
-    "res2.1.0.weight",
-    "res2.1.1.weight",
-    "res2.1.1.bias",
-    
-    "classifier.2.weight",
-    "classifier.2.bias",
-    "classifier.3.weight",
-    "classifier.3.bias",
-    
-    "classifier.6.weight",
-    "classifier.6.bias",
-    "classifier.7.weight",
-    "classifier.7.bias",
-    
-    "classifier.10.weight",
-    "classifier.10.bias"
+                "conv4.1.weight",
+                "conv4.1.bias",
+                "res2.0.0.weight",
+                "res2.0.1.weight",
+                "res2.0.1.bias",
+                "res2.1.0.weight",
+                "res2.1.1.weight",
+                "res2.1.1.bias",
+                "classifier.2.weight",
+                "classifier.2.bias",
+                "classifier.3.weight",
+                "classifier.3.bias",
+                "classifier.6.weight",
+                "classifier.6.bias",
+                "classifier.7.weight",
+                "classifier.7.bias",
+                "classifier.10.weight",
+                "classifier.10.bias",
             ]
         else:
             return []
 
     @staticmethod
     def get_layers_to_aggregate(model_name: str = None, dataset_mode: str = None):
-        """get layers for aggregation - same as freeze layers"""
+        """get head layers for aggregation"""
         return ModelFactory.get_layers_to_freeze(model_name, dataset_mode)
 
     @staticmethod
     def freeze_except_classifier(model, dataset_mode: str):
-        """freeze all parameters except classifier"""
+        """freeze all layers except head layers"""
         for param in model.parameters():
             param.requires_grad = False
 
@@ -189,7 +194,7 @@ def _load_lightning_checkpoint(
     num_classes: int,
     map_location: str = 'cpu'
 ):
-    """Load PyTorch Lightning checkpoint"""
+    """load lightning checkpoint"""
     return model_class.load_from_checkpoint(
         checkpoint_path,
         num_classes=num_classes,

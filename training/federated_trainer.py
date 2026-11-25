@@ -1,18 +1,18 @@
-import torch
+import gc
 import logging
 from copy import deepcopy
-import gc
-from typing import Dict, List 
-from training.local_trainer import LocalTrainer
-from training.aggregation import (
-    random_client_selection
-)
-from training.attack_schedule import NOTEBOOK_SCHEDULE
+from typing import Dict, List  # noqa: UP035
+
+import torch
+
 from evaluation.evaluator import ModelEvaluator
+from training.aggregation import random_client_selection
+from training.attack_schedule import NOTEBOOK_SCHEDULE
+from training.local_trainer import LocalTrainer
 
 
 class FederatedTrainer:
-    """main Federated Learning Trainer"""
+    """main federated learning trainer"""
 
     def __init__(self, config, device='cpu'):
         self.config = config
@@ -20,12 +20,13 @@ class FederatedTrainer:
         self.logger = logging.getLogger(__name__)
 
     def get_attack_schedule(self) -> List[str]:
-        """return exact per-round attack schedule from the final paper notebook."""
+        """get per-round attack schedule"""
+        n_rounds = self.config.federated.n_rounds
         if not self.config.attack.enabled:
-            return ['benign'] * self.config.federated.n_rounds
-        return list(NOTEBOOK_SCHEDULE)[:self.config.federated.n_rounds]
-
-    
+            return ['benign'] * n_rounds
+        if n_rounds <= len(NOTEBOOK_SCHEDULE):
+            return list(NOTEBOOK_SCHEDULE)[:n_rounds]
+        return list(NOTEBOOK_SCHEDULE) + ['benign'] * (n_rounds - len(NOTEBOOK_SCHEDULE))
 
     def train(self, data_info: Dict, global_model):
         """main federated training loop"""
@@ -34,10 +35,10 @@ class FederatedTrainer:
 
         attack_schedule = self.get_attack_schedule()
         model = global_model
-        
+
         init_acc = evaluator.evaluate(global_model, data_info['dataloaders']['selection_loader'])
         init_loss = evaluator.compute_loss(global_model, data_info['dataloaders']['selection_loader'])
-        best_score_prev = init_acc / max(init_loss, 1e-12) 
+        best_score_prev = init_acc / max(init_loss, 1e-12)
 
         for round_id in range(self.config.federated.n_rounds):
             attack_state = attack_schedule[round_id]
@@ -54,8 +55,7 @@ class FederatedTrainer:
                 attack_state
             )
 
-            # aggregation
-            
+            # bagged aggregation
             aggregated_models = random_client_selection(
                 node_models,
                 global_model,
@@ -68,13 +68,10 @@ class FederatedTrainer:
                     'coeff_mod_bit_sizes':
                         self.config.encryption.coeff_mod_bit_sizes,
                     'global_scale': self.config.encryption.global_scale
-                } if self.config.encryption.enabled else None
+                } if self.config.encryption.enabled else None # type: ignore
             )
 
-            # del node_models
-            # gc.collect()
-
-            # evaluation and Selection
+            # eval and selection
             best_model_this_round = None
             best_score_this_round = 0.0
 
@@ -84,10 +81,14 @@ class FederatedTrainer:
                     f"from {len(contributors)} nodes"
                 )
 
-                acc = evaluator.evaluate(agg_model, 
-                                        data_info['dataloaders']['selection_loader'])
-                loss = evaluator.compute_loss(agg_model,
-                                             data_info['dataloaders']['selection_loader'])
+                acc = evaluator.evaluate(
+                    agg_model,
+                    data_info['dataloaders']['selection_loader']
+                )
+                loss = evaluator.compute_loss(
+                    agg_model,
+                    data_info['dataloaders']['selection_loader']
+                )
                 score = acc / loss if loss > 0 else 0.0
 
                 self.logger.info(
@@ -109,10 +110,10 @@ class FederatedTrainer:
                 torch.cuda.empty_cache()
                 gc.collect()
 
-
             del node_models
             gc.collect()
-            # fail-safe Mechanism
+
+            # fail-safe check
             best_score_prev = self.config.federated.fail_safe_alpha * best_score_prev
             if best_score_this_round > best_score_prev:
                 model = best_model_this_round

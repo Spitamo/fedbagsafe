@@ -1,10 +1,10 @@
-import torch
-from copy import deepcopy
-import pytorch_lightning as pl
-from torch.utils.data import DataLoader
 import gc
 import logging
-from typing import List, Dict
+from copy import deepcopy
+from typing import Dict, List  # noqa: UP035
+
+import pytorch_lightning as pl
+import torch
 
 from models.model_factory import ModelFactory
 
@@ -32,16 +32,18 @@ class LocalTrainer:
 
         for client_id in range(self.config.federated.n_nodes):
             node_model = deepcopy(global_model)
-            
-            # freeze except classifier - pass dataset mode
+
+            # freeze backbone layers
             ModelFactory.freeze_except_classifier(
                 node_model,
                 self.config.dataset.mode
             )
             node_model = node_model.to(self.device)
 
-            client_status = ('Attack' if client_id < self.config.attack.malicious_clients and 
-                        attack_state != 'benign' else 'Normal')
+            client_status = (
+                'Attack' if client_id < self.config.attack.malicious_clients and
+                attack_state != 'benign' else 'Normal'
+            )
             self.logger.info(
                 f"Fine-tuning Node {client_id} [{client_status}] | "
                 f"Attack: {attack_state}"
@@ -57,7 +59,7 @@ class LocalTrainer:
             else:
                 client_loader = dataloader_map['clean'][round_id][client_id]
 
-            # train locally
+            # local training
             trainer = pl.Trainer(
                 logger=False,
                 enable_checkpointing=False,
@@ -70,10 +72,13 @@ class LocalTrainer:
             )
 
             node_model.train()
-            trainer.fit(node_model, client_loader,
-                    dataloader_map['eval_loader'])
+            trainer.fit(
+                node_model,
+                client_loader,
+                dataloader_map['selection_loader']
+            )
 
-            # apply model poisoning noise if needed
+            # apply model poisoning noise
             if client_id < self.config.attack.malicious_clients and attack_state == 'modelpoisoning':
                 self.logger.info("Applying model poisoning noise")
                 with torch.no_grad():
@@ -85,11 +90,7 @@ class LocalTrainer:
                         ).to(param.device)
                         param.add_(noise)
 
-            # node_model = node_model.to(self.device)
-            # torch.cuda.empty_cache()
-            # gc.collect()
-
-            # node_models.append(node_model)
+            # keep only trainable head weights on cpu
             head_state = {
                 k: v.detach().to('cpu').clone()
                 for k, v in node_model.state_dict().items()

@@ -1,9 +1,10 @@
-import torch
-import numpy as np
+import gc
 import random
 from copy import deepcopy
-from typing import List, Tuple, Dict
-import gc
+from typing import Dict, List  # noqa: UP035
+
+import torch
+
 from models.model_factory import ModelFactory
 
 
@@ -14,7 +15,7 @@ def uniform_average_aggregation(
     use_he: bool = False,
     he_config: Dict = None
 ):
-    """aggregate models using uniform average (memory-efficient version)"""
+    """aggregate models with uniform average on cpu"""
     if use_he and he_config:
         from security.aggregation_he import aggregate_with_he
         return aggregate_with_he(node_models, global_model, dataset_mode, he_config)
@@ -51,11 +52,13 @@ def random_client_selection(
     use_he: bool = False,
     he_config: Dict = None
 ):
-    """YIELd bagged aggregated models one at a time to prevent OOM."""
-    all_selected = []
-    for _ in range(int(1 / 3 * n_nodes)):
+    """yield bagged aggregated models one by one to save memory"""
+    n_bags = max(1, int(1 / 3 * n_nodes))
+    bag_size = max(1, int(2 / 3 * n_nodes))
 
-        all_selected.append(random.sample(range(n_nodes), int(2 / 3 * n_nodes)))
+    all_selected = []
+    for _ in range(n_bags):
+        all_selected.append(random.sample(range(n_nodes), bag_size))
 
     for selected_indices in all_selected:
         selected_models = [node_models[idx] for idx in selected_indices]
