@@ -104,7 +104,8 @@ Evaluated across **100 communication rounds** with **$N=100$ participating clien
 │   ├── config.yaml             # Master configuration file
 │   └── config_parser.py        # YAML and CLI argument parser
 ├── data/
-│   ├── dataset_loader.py       # CIFAR-10/100, FashionMNIST, FEMNIST loaders
+│   ├── dataset_loader.py       # Federated data partitioning & loaders
+│   └── prepare_femnist.py      # Auto-download & tensor caching for FEMNIST
 │   ├── dataset_modes.py        # Attack mode definitions
 │   └── data_utils.py           # Non-IID Dirichlet distribution tools
 ├── evaluation/
