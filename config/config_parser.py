@@ -1,13 +1,16 @@
-import yaml
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional  # noqa: UP035
+
+import yaml
+
 
 @dataclass
 class DatasetConfig:
     mode: str
     root: str
+    data_dir: str
     download: bool
 
 
@@ -16,8 +19,8 @@ class ModelConfig:
     name: str
     dropout: float
     pretrained: bool
-    checkpoint_dir: str = './checkpoints'  
-    load_pretrained: bool = True  
+    checkpoint_dir: str = './checkpoints'
+    load_pretrained: bool = True
 
 
 @dataclass
@@ -30,6 +33,7 @@ class FederatedConfig:
     local_epochs: int
     fail_safe_alpha: float
 
+
 @dataclass
 class TrainingConfig:
     batch_size: int
@@ -39,12 +43,18 @@ class TrainingConfig:
     weight_decay: float
     gradient_clip: float
 
+    def __post_init__(self):
+        self.learning_rate = float(self.learning_rate)
+        self.weight_decay = float(self.weight_decay)
+
+
 @dataclass
 class AttackConfig:
     enabled: bool
     malicious_clients: int
     target_label: int
     types: List[str]
+
 
 @dataclass
 class EncryptionConfig:
@@ -54,18 +64,20 @@ class EncryptionConfig:
     coeff_mod_bit_sizes: tuple
     global_scale: int
 
+
 @dataclass
 class AggregationConfig:
     mode: str
     he_enabled: Optional[bool]
     selection_strategy: str
 
-@dataclass
+
 @dataclass
 class DeviceConfig:
     type: str
-    accelerator: str = 'cuda'
+    accelerator: str = 'auto'
     devices: Any = 'auto'
+
 
 @dataclass
 class LoggingConfig:
@@ -74,11 +86,13 @@ class LoggingConfig:
     save_logs: bool
     log_file: str
 
+
 @dataclass
 class CheckpointConfig:
     enabled: bool
     save_dir: str
     save_interval: int
+
 
 @dataclass
 class PhasesConfig:
@@ -88,6 +102,7 @@ class PhasesConfig:
     high_intensity_attacks: int
     consecutive_attack_stress_test: int
     recovery_and_final_validation: int
+
 
 @dataclass
 class Config:
@@ -105,7 +120,7 @@ class Config:
     seed: int
 
     def update_he_flag(self):
-        """synchronize HE flags from aggregation or encryption config"""
+        """sync he flags between aggregation and encryption"""
         if self.aggregation.he_enabled is not None:
             self.encryption.enabled = self.aggregation.he_enabled
         self.aggregation.he_enabled = self.encryption.enabled
@@ -114,23 +129,23 @@ class Config:
 class ConfigParser:
     @staticmethod
     def load_yaml(config_path: str) -> Dict[str, Any]:
-        """load YAML configuration file"""
+        """load yaml config file"""
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
 
     @staticmethod
     def parse(config_path: Optional[str] = None, **kwargs) -> Config:
-        """parse configuration from YAML and CLI arguments"""
+        """parse config from yaml and cli args"""
         if config_path is None:
             config_path = Path(__file__).parent / 'config.yaml'
 
-        # load from YAML
+        # load yaml
         config_dict = ConfigParser.load_yaml(str(config_path))
 
-        # 0verride with CLI arguments
+        # override with cli args
         ConfigParser._update_nested_dict(config_dict, kwargs)
 
-        # create dataclass instances
+        # build config objects
         config = Config(
             dataset=DatasetConfig(**config_dict['dataset']),
             model=ModelConfig(**config_dict['model']),
@@ -152,14 +167,14 @@ class ConfigParser:
             seed=config_dict['seed']
         )
 
-        # synchronize HE flags
+        # sync he flags
         config.update_he_flag()
 
         return config
 
     @staticmethod
     def _update_nested_dict(d: Dict, updates: Dict):
-        """update nested dictionaries"""
+        """update nested dict values"""
         for key, value in updates.items():
             if isinstance(value, dict) and key in d and isinstance(d[key], dict):
                 ConfigParser._update_nested_dict(d[key], value)
@@ -172,73 +187,68 @@ def create_argument_parser() -> argparse.ArgumentParser:
         description='FedBagSafe with Optional Homomorphic Encryption',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-command samples:
+examples:
   python main.py --config config/config.yaml
   python main.py --dataset fashionmnist --enable-he
   python main.py --dataset cifar10 --disable-he --n-rounds 50
-  python main.py --dataset femnist --enable-he --n-nodes 10 or ...
+  python main.py --dataset femnist --enable-he --n-nodes 10
         """
     )
 
-    # configuration
+    # config file
     parser.add_argument('--config', type=str, default=None,
-                       help='Path to YAML configuration file')
+                        help='path to yaml config file')
 
     # dataset
     parser.add_argument('--dataset', type=str,
-                       choices=['cifar10', 'cifar100', 'fashionmnist', 'femnist'],
-                       help='Dataset to use')
+                        choices=['cifar10', 'cifar100', 'fashionmnist', 'femnist'],
+                        help='dataset to use')
 
     # model
     parser.add_argument('--model', type=str,
-                       choices=['resnet9', 'cifar_resnet'],
-                       help='Model architecture')
+                        choices=['resnet9', 'cifar_resnet'],
+                        help='model architecture')
 
-    # federated Learning
-    parser.add_argument('--n-nodes', type=int, help='Number of clients')
-    parser.add_argument('--n-rounds', type=int, help='Number of federated rounds')
+    # federated learning
+    parser.add_argument('--n-nodes', type=int, help='number of clients')
+    parser.add_argument('--n-rounds', type=int, help='number of federated rounds')
     parser.add_argument('--malicious-clients', type=int,
-                       help='Number of malicious clients')
+                        help='number of malicious clients')
 
     # training
-    parser.add_argument('--batch-size', type=int, help='Training batch size')
-    parser.add_argument('--lr', type=float, help='Learning rate')
-    parser.add_argument('--epochs', type=int, help='Local training epochs')
+    parser.add_argument('--batch-size', type=int, help='training batch size')
+    parser.add_argument('--lr', type=float, help='learning rate')
+    parser.add_argument('--epochs', type=int, help='local training epochs')
 
-    # encrypton
+    # encryption
     parser.add_argument('--enable-he', action='store_true',
-                       help='Enable Homomorphic Encryption')
+                        help='enable homomorphic encryption')
     parser.add_argument('--disable-he', action='store_true',
-                       help='Disable Homomorphic Encryption')
+                        help='disable homomorphic encryption')
 
     # attacks
     parser.add_argument('--disable-attacks', action='store_true',
-                       help='Disable all attacks')
+                        help='disable all attacks')
     parser.add_argument('--enable-attacks', action='store_true',
-                       help='Enable attacks')
+                        help='enable attacks')
 
-    #device
+    # device
     parser.add_argument('--device', type=str, choices=['cpu', 'cuda'],
-                       help='Device to use (cpu or cuda)')
+                        help='device to use (cpu or cuda)')
 
     # logging
-    parser.add_argument('--seed', type=int, help='Random seed')
+    parser.add_argument('--seed', type=int, help='random seed')
     parser.add_argument('--verbose', action='store_true',
-                       help='Verbose logging')
+                        help='verbose logging')
     parser.add_argument('--log-level', type=str,
-                       choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
-                       help='Logging level')
-
-    # validation
-    parser.add_argument('--mode', type=str,
-                       choices=['random'],
-                       help='Client selection mode')
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+                        help='logging level')
 
     return parser
 
 
 def process_cli_args(args) -> Dict[str, Any]:
-    """convert CLI arguments to config update dictionary"""
+    """convert cli args to config dict"""
     updates = {}
 
     if args.dataset:
@@ -274,10 +284,14 @@ def process_cli_args(args) -> Dict[str, Any]:
             updates['attack']['enabled'] = args.enable_attacks
         if args.malicious_clients is not None:
             updates['attack']['malicious_clients'] = args.malicious_clients
-    if args.device:
-        updates['device'] = {'type': args.device}
 
-    if args.seed:
+    if args.device:
+        updates['device'] = {
+            'type': args.device,
+            'accelerator': args.device
+        }
+
+    if args.seed is not None:
         updates['seed'] = args.seed
 
     if args.log_level:
@@ -286,9 +300,5 @@ def process_cli_args(args) -> Dict[str, Any]:
     if args.verbose:
         updates['logging'] = updates.get('logging', {})
         updates['logging']['verbose'] = True
-
-    if args.mode:
-        updates['aggregation'] = updates.get('aggregation', {})
-        updates['aggregation']['selection_strategy'] = args.mode
 
     return updates

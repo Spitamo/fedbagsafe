@@ -1,24 +1,21 @@
-import logging
-import sys
 import torch
-from pathlib import Path
 
 from config.config_parser import ConfigParser, create_argument_parser, process_cli_args
 from data.dataset_loader import DatasetFactory, create_dataloaders
+from evaluation.evaluator import ModelEvaluator
 from models.model_factory import ModelFactory
 from training.federated_trainer import FederatedTrainer
-from evaluation.evaluator import ModelEvaluator
-from utils.seed_utils import seed_everything
 from utils.device_utils import get_device
 from utils.logging_utils import setup_logging
+from utils.seed_utils import seed_everything
 
 
 def main():
-    #parse arguments
+    # parse arguments
     arg_parser = create_argument_parser()
     args = arg_parser.parse_args()
 
-    #parse configuration
+    # parse config
     cli_updates = process_cli_args(args)
     config = ConfigParser.parse(args.config, **cli_updates)
 
@@ -28,7 +25,7 @@ def main():
     logger = setup_logging(
         config.logging.level,
         config.logging.verbose,
-        config.logging.log_file if config.logging.save_logs else None
+        config.logging.log_file if config.logging.save_logs else None # type: ignore
     )
 
     logger.info("=" * 80)
@@ -40,7 +37,7 @@ def main():
     logger.info(f"Rounds: {config.federated.n_rounds}")
     logger.info(f"Homomorphic Encryption: {config.encryption.enabled}")
     logger.info(f"Attacks Enabled: {config.attack.enabled}")
-    logger.info(f"Device: {config.device.type}")
+    logger.info(f"Device: {config.device.type} (accelerator: {config.device.accelerator})")
     logger.info("=" * 80)
 
     # prepare data
@@ -51,7 +48,7 @@ def main():
         config.federated.n_rounds,
         config.federated.min_samples,
         config.federated.max_samples,
-        config.dataset.root
+        config.dataset.data_dir
     )
 
     # create dataloaders
@@ -75,9 +72,9 @@ def main():
 
     # create or load model
     logger.info(f"Creating {config.model.name} model...")
-    
+
     if config.model.load_pretrained:
-        logger.info(f"Attempting to load pretrained model from checkpoint...")
+        logger.info("Loading pretrained model from checkpoint...")
         global_model = ModelFactory.load_pretrained_model(
             config.model.name,
             config.dataset.mode,
@@ -93,10 +90,12 @@ def main():
             config.dataset.mode,
             config.model.dropout
         )
-    
+
+    global_model.lr = config.training.learning_rate
+    global_model.weight_decay = config.training.weight_decay
     global_model = global_model.to(device)
 
-    # initial model evaluation (pretrained model — single pass to match notebook RNG)
+    # initial model evaluation
     evaluator = ModelEvaluator(config, device)
     logger.info("Testing initial pretrained model...")
     initial_model_acc = evaluator.evaluate(global_model, dataloaders['eval_loader'])
@@ -115,7 +114,7 @@ def main():
 
     logger.info("Training completed!")
 
-    # evaluate initial backdoor rate after training 
+    # evaluate initial backdoor rate
     initial_model_backdoor = evaluator.evaluate(global_model, dataloaders['backdoor_loader'])
     logger.info(f"Initial Backdoor Success Rate: {initial_model_backdoor:.4f}")
 
@@ -123,38 +122,37 @@ def main():
     logger.info("=" * 80)
     logger.info("FINAL EVALUATION")
     logger.info("=" * 80)
-    
+
     final_acc = evaluator.evaluate(final_model, dataloaders['eval_loader'])
     final_backdoor = evaluator.evaluate(final_model, dataloaders['backdoor_loader'])
-    
+
     logger.info(f"Final Model Accuracy: {final_acc:.4f}")
     logger.info(f"Final Backdoor Success Rate: {final_backdoor:.4f}")
-    
-    # calculate improvements
+
+    # calculate changes
     acc_improvement = final_acc - initial_model_acc
     backdoor_change = final_backdoor - initial_model_backdoor
-    
+
     logger.info("")
     logger.info("=" * 80)
     logger.info("PERFORMANCE METRICS")
     logger.info("=" * 80)
-    
-    # main Accuracy
-    logger.info(f"\n Clean Accuracy:")
+
+    # clean accuracy
+    logger.info("\n Clean Accuracy:")
     logger.info(f"  Initial:    {initial_model_acc:.4f}")
     logger.info(f"  Final:      {final_acc:.4f}")
     if acc_improvement >= 0:
         logger.info(f"  Change:     +{acc_improvement:.4f} ({acc_improvement*100:+.2f}%)")
     else:
         logger.info(f"  Change:     {acc_improvement:.4f} ({acc_improvement*100:+.2f}%)")
-    
-    # backdoor Rate
-    logger.info(f"\n Backdoor Attack Success Rate:")
+
+    # backdoor rate
+    logger.info("\n Backdoor Attack Success Rate:")
     logger.info(f"  Initial:    {initial_model_backdoor:.4f} ({initial_model_backdoor*100:.2f}%)")
     logger.info(f"  Final:      {final_backdoor:.4f} ({final_backdoor*100:.2f}%)")
-    backdoor_change_msg = f"  Change:   {backdoor_change:+.4f} ({backdoor_change*100:+.2f}%)"
-    logger.info(backdoor_change_msg)
-    
+    logger.info(f"  Change:   {backdoor_change:+.4f} ({backdoor_change*100:+.2f}%)")
+
     logger.info("=" * 80)
 
 

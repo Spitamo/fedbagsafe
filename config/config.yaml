@@ -1,21 +1,21 @@
-# Dataset Configuration
+# dataset config
 dataset:
-  mode: 'fashionmnist'  # choices: cifar10, cifar100, fashionmnist, femnist
+  mode: 'fashionmnist'  # cifar10, cifar100, fashionmnist, femnist
   root: '.'
+  data_dir: "./datasets"
   download: true
 
-
+# model config
 model:
-  name: 'resnet9'  
+  name: 'resnet9'
   dropout: 0.3
   pretrained: true
-  checkpoint_dir: './checkpoints' 
-  load_pretrained: True  
+  checkpoint_dir: './checkpoints'
+  load_pretrained: true
 
-
-#federated Learning Configuration
+# federated learning config
 federated:
-  n_nodes: 100
+  n_nodes: 100  
   n_rounds: 100
   samples_per_client: 400
   min_samples: null
@@ -23,16 +23,16 @@ federated:
   local_epochs: 1
   fail_safe_alpha: 0.98
 
-# training Configuration
+# training config
 training:
   batch_size: 8
   eval_batch_size: 64
   num_workers: 0
-  learning_rate: 5e-5
-  weight_decay: 1e-2
+  learning_rate: 5.0e-5 # ensure PyYAML parses scientific notation as float
+  weight_decay: 1.0e-2
   gradient_clip: 1.0
 
-# attack Configuration
+# attack config
 attack:
   enabled: true
   malicious_clients: 24
@@ -43,28 +43,27 @@ attack:
     - 'label_flip'
     - 'model_poisoning'
 
-# homomorphic Encryption Configuration
+# he config
 encryption:
-  enabled: false  # Set to true to enable HE aggregation
-  type: 'CKKS'    # choices: CKKS
+  enabled: false  # set true to enable he aggregation
+  type: 'CKKS'
   poly_modulus_degree: 8192
   coeff_mod_bit_sizes: [60, 40, 40, 60]
   global_scale: 1099511627776
 
-# aggregation Configuration
+# aggregation config
 aggregation:
-  mode: 'uniform_average'  # uniform_average    ###############
-  he_enabled: false  # 0verride encryption.enabled if specified
-  selection_strategy: 'random'  # uniform random
+  mode: 'uniform_average'
+  he_enabled: null  # override encryption.enabled if set
+  selection_strategy: 'random'
 
-# device Configuration
-# device Configuration
+# device config
 device:
-  type: 'cpu'          # manual ops (notebook: HW = 'cpu')
-  accelerator: 'cpu'  # lightning Trainers (notebook: accelerator = 'cuda')
-  devices: 'auto'      # set to 1 on multi-GPU machines
+  type: 'cpu'
+  accelerator: 'cpu'  # auto, cpu, or cuda
+  devices: 'auto'
 
-# logging Configuration
+# logging config
 logging:
   level: 'INFO'
   verbose: true
@@ -77,10 +76,10 @@ checkpoint:
   save_dir: './checkpoints'
   save_interval: 5
 
-# random Seed
+# random seed
 seed: 42
 
-# legacy
+# experiment phases
 phases:
   stable_initialization: 10
   gradual_attack_introduction: 15

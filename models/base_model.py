@@ -1,7 +1,6 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import pytorch_lightning as pl
+import torch
+import torch.nn.functional as F
 
 
 class ImageClassificationBase(pl.LightningModule):
@@ -50,8 +49,8 @@ class ImageClassificationBase(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(
             filter(lambda p: p.requires_grad, self.parameters()),
-            lr=5e-5,
-            weight_decay=1e-2
+            lr=getattr(self, 'lr', 5e-5),
+            weight_decay=getattr(self, 'weight_decay', 1e-2)
         )
 
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -59,7 +58,6 @@ class ImageClassificationBase(pl.LightningModule):
             mode='min',
             factor=0.5,
             patience=3,
-            # verbose=True,
             threshold=1e-4,
             min_lr=1e-5
         )

@@ -26,7 +26,11 @@ env/
 *.ckpt
 *.pth
 *.pt
-data/
 checkpoints/
 *.csv
 *.log
+
+datasets/
+*.h5
+*.tar.bz2
+flattened_emnist.pt

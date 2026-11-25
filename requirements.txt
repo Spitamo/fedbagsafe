@@ -1,6 +1,9 @@
-torch==2.0.1
-pytorch-lightning==2.0.8
-torchvision==0.15.2
-numpy==1.24.3
-pyyaml==6.0
-tenseal==0.3.14
+torch>=2.0.0
+torchvision
+pytorch-lightning>=2.0.0
+numpy
+pyyaml
+h5py
+tqdm
+# optional: only needed for ckks homomorphic encryption
+# tenseal

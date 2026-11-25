@@ -120,6 +120,7 @@ Evaluated across **100 communication rounds** with **$N=100$ participating clien
 │   ├── encryption.py           # TenSEAL CKKS encryption context
 │   └── aggregation_he.py       # Secure encrypted aggregation
 ├── training/
+│   ├── attack_schedule.py      # 6-phase per-round attack schedule
 │   ├── federated_trainer.py    # Main FL loop & phase scheduler
 │   ├── local_trainer.py        # Client-side training logic
 │   └── aggregation.py          # Bagging & Selective uniform average

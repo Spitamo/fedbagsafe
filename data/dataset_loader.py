@@ -1,25 +1,27 @@
-import torch
-import torch.nn as nn
-import torchvision
-from torchvision import datasets, transforms
-from torch.utils.data import Dataset, DataLoader
+from typing import Optional
+
 import numpy as np
-from typing import Tuple, Optional
-from data.dataset_modes import DatasetMode
+import torch
+from torch.utils.data import DataLoader, Dataset
+from torchvision import datasets, transforms
+
 from data.data_utils import (
+    allocate_samples_to_clients,
     create_class_pools,
     create_heterogeneous_distribution,
-    allocate_samples_to_clients,
-    create_round_indices
+    create_round_indices,
 )
+from data.dataset_modes import DatasetMode
+from data.prepare_femnist import prepare_flattened_emnist
 
 
 class FEMNISTDataset(Dataset):
-    """FEMNIST dataset loader"""
+    """femnist dataset loader"""
 
-    def __init__(self, split='train', transform=None):
+    def __init__(self, split='train', transform=None, root='.'):
+        cache_file = prepare_flattened_emnist(root)
         obj = torch.load(
-            'flattened_emnist.pt',
+            cache_file,
             map_location='cpu',
             weights_only=False
         )
@@ -56,10 +58,11 @@ class FEMNISTDataset(Dataset):
 class CustomDataset(Dataset):
     """custom dataset with attack modes"""
 
-    def __init__(self, images, labels, mode=DatasetMode.CLEAN):
+    def __init__(self, images, labels, mode=DatasetMode.CLEAN, target_label=9):
         self.images = images
         self.labels = torch.tensor(labels, dtype=torch.long)
         self.mode = mode
+        self.target_label = target_label
 
         if self.mode == DatasetMode.MODEL_POISONING:
             unique_classes = np.unique(labels)
@@ -106,7 +109,6 @@ class CustomDataset(Dataset):
                     to_class = np.random.choice(available_targets)
                     flip_mapping[from_class] = to_class
 
-        # print(f"Label Flip Mapping: {flip_mapping}")
         return flip_mapping
 
     def __len__(self):
@@ -125,14 +127,13 @@ class CustomDataset(Dataset):
                 image = image / 255.0
 
         # apply attacks
-        # apply attacks
         if self.mode == DatasetMode.MIXED_BACKDOOR and idx % 2:
             image[:, [5, 5, 5, 6, 6, 6, 7, 7, 7], [5, 6, 7, 5, 6, 7, 5, 6, 7]] = 0
-            label = 9
+            label = self.target_label
 
         elif self.mode == DatasetMode.FULL_BACKDOOR:
             image[:, [5, 5, 5, 6, 6, 6, 7, 7, 7], [5, 6, 7, 5, 6, 7, 5, 6, 7]] = 0
-            label = 9
+            label = self.target_label
 
         elif self.mode == DatasetMode.LABEL_FLIP and np.random.random() < 0.3:
             label = self.flip_mapping.get(label, label)
@@ -186,7 +187,7 @@ class DatasetFactory:
 
     @staticmethod
     def get_transform(dataset_mode: str):
-        """get data transformation for dataset"""
+        """get data transform for dataset"""
         if dataset_mode == 'fashionmnist':
             return transforms.Compose([
                 transforms.ToTensor(),
@@ -201,30 +202,30 @@ class DatasetFactory:
 
     @staticmethod
     def load_dataset(dataset_mode: str, root: str = '.'):
-        """lod dataset"""
+        """load dataset"""
         transform = DatasetFactory.get_transform(dataset_mode)
 
         if dataset_mode == 'cifar100':
             train_ds = datasets.CIFAR100(root=root, train=True, download=True,
-                                        transform=transform)
+                                         transform=transform)
             test_ds = datasets.CIFAR100(root=root, train=False, download=True,
-                                       transform=transform)
+                                        transform=transform)
 
         elif dataset_mode == 'cifar10':
             train_ds = datasets.CIFAR10(root=root, train=True, download=True,
-                                       transform=transform)
+                                        transform=transform)
             test_ds = datasets.CIFAR10(root=root, train=False, download=True,
-                                      transform=transform)
+                                       transform=transform)
 
         elif dataset_mode == 'fashionmnist':
-            train_ds = datasets.FashionMNIST(root=root, train=True, 
-                                            download=True, transform=transform)
+            train_ds = datasets.FashionMNIST(root=root, train=True,
+                                             download=True, transform=transform)
             test_ds = datasets.FashionMNIST(root=root, train=False,
-                                           download=True, transform=transform)
+                                            download=True, transform=transform)
 
         elif dataset_mode == 'femnist':
-            train_ds = FEMNISTDataset(split='train')
-            test_ds = FEMNISTDataset(split='test')
+            train_ds = FEMNISTDataset(split='train', root=root)
+            test_ds = FEMNISTDataset(split='test', root=root)
 
         else:
             raise ValueError(f"Unknown dataset: {dataset_mode}")
@@ -269,7 +270,7 @@ class DatasetFactory:
         data_np = np.concatenate(data_np)
         labels_np = np.concatenate(labels_np)
 
-        # create distributions
+        # create non-iid splits
         class_pools = create_class_pools(labels_np, n_classes)
         client_class_dist = create_heterogeneous_distribution(n_nodes, n_classes)
         client_data_pools = allocate_samples_to_clients(
@@ -348,7 +349,7 @@ def create_dataloaders(
     target_label: int = 9,
     malicious_clients: int = 24
 ):
-    """create data loaders for training"""
+    """create data loaders for training and eval"""
     use_pin_memory = torch.cuda.is_available()
     worker_kwargs = {'persistent_workers': False, 'prefetch_factor': 1} if num_workers > 0 else {}
     attack_configs = {
@@ -372,8 +373,12 @@ def create_dataloaders(
                        attack_mode.get(node_id, DatasetMode.CLEAN)
 
                 loader = DataLoader(
-                    CustomDataset(nodes_data[node_id][rnd],
-                                nodes_labels[node_id][rnd], mode=mode),
+                    CustomDataset(
+                        nodes_data[node_id][rnd],
+                        nodes_labels[node_id][rnd],
+                        mode=mode,
+                        target_label=target_label
+                    ),
                     batch_size=batch_size,
                     shuffle=True,
                     num_workers=num_workers,
@@ -385,18 +390,18 @@ def create_dataloaders(
 
         dataloaders[f'nodes_{attack_name}_data_loaders'] = result_loaders
 
-    # central data loader
+    # central loader
     central_loader = DataLoader(
         CustomDataset(central_data, central_labels, mode=DatasetMode.CLEAN),
         batch_size=eval_batch_size,
         shuffle=True,
         num_workers=num_workers,
         drop_last=True,
-        pin_memory=use_pin_memory
-        , **worker_kwargs
+        pin_memory=use_pin_memory,
+        **worker_kwargs
     )
 
-    # evaluation loader
+    # eval and selection loaders
     if dataset_mode == 'femnist':
         eval_size = 7000
         actual_eval_batch_size = 100
@@ -406,7 +411,7 @@ def create_dataloaders(
 
     eval_loader = DataLoader(
         CustomDataset(test_data[:eval_size], test_labels[:eval_size],
-                     mode=DatasetMode.CLEAN),
+                      mode=DatasetMode.CLEAN),
         batch_size=actual_eval_batch_size,
         shuffle=False,
         num_workers=num_workers,
@@ -414,8 +419,8 @@ def create_dataloaders(
         **worker_kwargs
     )
     selection_loader = DataLoader(
-        CustomDataset(test_data[eval_size:eval_size*2], test_labels[eval_size:eval_size*2],
-                     mode=DatasetMode.CLEAN),
+        CustomDataset(test_data[eval_size:eval_size * 2], test_labels[eval_size:eval_size * 2],
+                      mode=DatasetMode.CLEAN),
         batch_size=actual_eval_batch_size,
         shuffle=False,
         num_workers=num_workers,
@@ -429,7 +434,8 @@ def create_dataloaders(
         CustomDataset(
             test_data[clean_label_mask][:600],
             np.array(test_labels)[clean_label_mask][:600],
-            mode=DatasetMode.FULL_BACKDOOR
+            mode=DatasetMode.FULL_BACKDOOR,
+            target_label=target_label
         ),
         batch_size=100,
         shuffle=False,
@@ -446,5 +452,5 @@ def create_dataloaders(
         'backdoor': dataloaders['nodes_backdoor_data_loaders'],
         'label_flip': dataloaders['nodes_label_flip_data_loaders'],
         'model_poisoning': dataloaders['nodes_model_poison_data_loaders'],
-        'selection_loader' : selection_loader
+        'selection_loader': selection_loader
     }
