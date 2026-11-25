@@ -61,7 +61,7 @@ aggregation:
 device:
   type: 'cpu'
   accelerator: 'cpu'  # auto, cpu, or cuda
-  devices: 'auto'
+  devices: 1
 
 # logging config
 logging:
