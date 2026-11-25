@@ -1,7 +1,8 @@
-import torch
 import logging
-from pytorch_lightning import Trainer
+
+import torch
 import torch.nn.functional as F
+from pytorch_lightning import Trainer
 
 
 class ModelEvaluator:
@@ -15,7 +16,6 @@ class ModelEvaluator:
     def evaluate(self, model, dataloader):
         """evaluate model accuracy"""
         model = model.to(self.device)
-        # model.eval()
 
         logger = logging.getLogger("pytorch_lightning")
         old_level = logger.level

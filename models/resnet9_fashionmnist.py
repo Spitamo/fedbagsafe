@@ -1,10 +1,10 @@
-import torch
 import torch.nn as nn
+
 from models.base_model import ImageClassificationBase
 
 
 def conv_block(in_channels, out_channels, pool=False):
-    """convolutional block with BatchNorm and ReLU"""
+    """conv block with batchnorm and relu"""
     layers = [
         nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
         nn.BatchNorm2d(out_channels),
@@ -16,13 +16,12 @@ def conv_block(in_channels, out_channels, pool=False):
 
 
 class ResNet9FashionMNIST(ImageClassificationBase):
-    """resnet9 optimized for FashionMNIST dataset"""
+    """resnet9 for fashionmnist dataset"""
 
     def __init__(self, num_classes=10, dropout=0.3):
         super().__init__()
         self.save_hyperparameters()
 
-        # larger architecture for FashionMNIST
         self.conv1 = conv_block(1, 64)
         self.conv2 = conv_block(64, 128, pool=True)
         self.res1 = nn.Sequential(
@@ -56,11 +55,11 @@ class ResNet9FashionMNIST(ImageClassificationBase):
         self._init_weights()
 
     def _init_weights(self):
-        """Initialize weights"""
+        """init model weights"""
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', 
-                                       nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode='fan_out',
+                                        nonlinearity='relu')
             elif isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)

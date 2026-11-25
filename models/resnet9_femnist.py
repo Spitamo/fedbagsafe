@@ -1,10 +1,10 @@
-import torch
 import torch.nn as nn
+
 from models.base_model import ImageClassificationBase
 
 
 def conv_block(in_channels, out_channels, pool=False):
-    """convolutional block with BatchNorm and ReLU"""
+    """conv block with batchnorm and relu"""
     layers = [
         nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
         nn.BatchNorm2d(out_channels),
@@ -16,7 +16,7 @@ def conv_block(in_channels, out_channels, pool=False):
 
 
 class ResNet9Femnist(ImageClassificationBase):
-    """resnet9 optimized for FEMNIST dataset - matches checkpoint structure"""
+    """resnet9 for femnist dataset"""
 
     def __init__(self, num_classes=62, dropout=0.3):
         super().__init__()
@@ -46,7 +46,6 @@ class ResNet9Femnist(ImageClassificationBase):
             nn.Dropout(0.2),
             nn.Linear(128, num_classes)
         )
-
 
     def forward(self, x):
         out = self.conv1(x)

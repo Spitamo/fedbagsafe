@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class DatasetMode(Enum):
     """attack modes for dataset"""
     CLEAN = 0

@@ -1,10 +1,10 @@
-import torch
-import numpy as np
-from typing import List, Dict
 from copy import deepcopy
+from typing import Dict, List  # noqa: UP035
 
-from security.encryption import HomomorphicEncryption
+import torch
+
 from models.model_factory import ModelFactory
+from security.encryption import HomomorphicEncryption
 
 
 def aggregate_with_he(
@@ -13,7 +13,7 @@ def aggregate_with_he(
     dataset_mode: str,
     he_config: Dict
 ) -> torch.nn.Module:
-    """aggregate models using Homomorphic Encryption"""
+    """aggregate models with homomorphic encryption"""
     he = HomomorphicEncryption(
         poly_modulus_degree=he_config['poly_modulus_degree'],
         coeff_mod_bit_sizes=tuple(he_config['coeff_mod_bit_sizes']),
@@ -34,7 +34,7 @@ def aggregate_with_he(
         enc_model, shapes = he.encrypt_model(model, layers_to_aggregate)
         _server_add_inplace(enc_acc, enc_model, shapes)
 
-    # Dec and update
+    # decrypt and update
     decrypted = he.decrypt_model(enc_acc, len(node_models))
 
     for key in layers_to_aggregate:

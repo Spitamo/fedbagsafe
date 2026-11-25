@@ -1,5 +1,7 @@
+from typing import Dict, List  # noqa: UP035
+
 import numpy as np
-from typing import List, Dict, Tuple
+
 
 def create_class_pools(labels_np: np.ndarray, n_classes: int) -> List[list]:
     """create index pools for each class"""
@@ -13,7 +15,7 @@ def create_heterogeneous_distribution(
     n_nodes: int,
     n_classes: int
 ) -> List[Dict]:
-    """create heterogeneous class distribution for clients"""
+    """create non-iid class distribution for clients"""
     client_class_distribution = []
 
     for cid in range(n_nodes):
@@ -41,7 +43,7 @@ def allocate_samples_to_clients(
     n_nodes: int,
     samples_per_client: int
 ) -> List[list]:
-    """allocate samples to clients based on heterogeneous distribution"""
+    """allocate samples to clients based on class weights"""
     client_data_pools = [[] for _ in range(n_nodes)]
 
     for cid in range(n_nodes):
@@ -53,7 +55,7 @@ def allocate_samples_to_clients(
             samples_per_client * class_weights
         ).astype(int)
 
-        # ensure total samples match target
+        # match total sample count
         while np.sum(samples_per_class) < samples_per_client:
             random_class_idx = np.random.randint(0, len(selected_classes))
             samples_per_class[random_class_idx] += 1
@@ -63,7 +65,7 @@ def allocate_samples_to_clients(
             if samples_per_class[random_class_idx] > 1:
                 samples_per_class[random_class_idx] -= 1
 
-        # allocate samples from class pools
+        # take samples from class pools
         for class_id, num_samples in zip(selected_classes, samples_per_class):
             if num_samples > 0:
                 if len(class_pools[class_id]) < num_samples:
@@ -90,7 +92,7 @@ def create_round_indices(
     min_samples: int,
     max_samples: int
 ) -> List[List[List]]:
-    """create round-based sample indices for each client"""
+    """create per-round sample indices for each client"""
     client_indices = [[[] for _ in range(n_rounds)] for _ in range(n_nodes)]
 
     for cid in range(n_nodes):
@@ -119,7 +121,7 @@ def create_round_indices(
                 if labels_np[idx] in selected_classes_this_round:
                     valid_indices.append(idx)
 
-            # select indices for this round
+            # pick indices for this round
             if len(valid_indices) >= num_samples_this_round:
                 selected_indices = np.random.choice(
                     valid_indices,

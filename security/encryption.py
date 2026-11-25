@@ -1,6 +1,7 @@
+from typing import Dict, List, Tuple  # noqa: UP035
+
 import numpy as np
 import torch
-from typing import Dict, Tuple, List
 
 try:
     import tenseal as ts
@@ -10,9 +11,7 @@ except ImportError:
 
 
 class HomomorphicEncryption:
-    """HE utilities using CKKS scheme"""
-
-    POLY_MODULUS_DEGREE = 8192
+    """he utilities using ckks"""
 
     def __init__(
         self,
@@ -35,7 +34,7 @@ class HomomorphicEncryption:
         self.slot_count = poly_modulus_degree // 2
 
     def _build_private_context(self):
-        """build private CKKS context"""
+        """build private ckks context"""
         ctx = ts.context(
             ts.SCHEME_TYPE.CKKS,
             poly_modulus_degree=self.poly_modulus_degree,
@@ -47,7 +46,7 @@ class HomomorphicEncryption:
         return ctx
 
     def _build_public_context(self):
-        """build public CKKS context"""
+        """build public ckks context"""
         serialized = self.private_ctx.serialize(save_secret_key=False)
         public_ctx = ts.context_from(serialized)
         public_ctx.make_context_public()
@@ -58,10 +57,9 @@ class HomomorphicEncryption:
         model,
         layers_to_aggregate: List[str]
     ) -> Tuple[Dict, Dict]:
-        """Enc model parameters"""
+        """encrypt model layers"""
         enc_model = {}
         shapes = {}
-        # sd = model.state_dict()
         sd = model if isinstance(model, dict) else model.state_dict()
 
         for key in layers_to_aggregate:
@@ -82,29 +80,26 @@ class HomomorphicEncryption:
         enc_acc: Dict,
         num_clients: int
     ) -> Dict[str, torch.Tensor]:
-        """Dec model parameters"""
+        """decrypt model layers"""
         decrypted = {}
 
         for key, payload in enc_acc.items():
             vals = []
             chunks = payload.get("chunks", [])
-            
+
             for chunk in chunks:
-                # check if chunk is already decrypted (string) or encrypted
-                if isinstance(chunk, str):
-                    # already serialized, deserialize first
+                # deserialize if bytes or string, else serialize first
+                if isinstance(chunk, (bytes, str)):
                     ch_priv = ts.ckks_vector_from(self.private_ctx, chunk)
-                    vals.extend(ch_priv.decrypt())
                 else:
-                    # still encrypted, serialize then deserialize
                     blob = chunk.serialize()
                     ch_priv = ts.ckks_vector_from(self.private_ctx, blob)
-                    vals.extend(ch_priv.decrypt())
+                vals.extend(ch_priv.decrypt())
 
             shape = payload.get("shape", None)
             if shape is None:
                 raise ValueError(f"Missing shape for key {key}")
-            
+
             needed = int(np.prod(shape))
             vals = vals[:needed]
 
