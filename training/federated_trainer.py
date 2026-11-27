@@ -74,7 +74,7 @@ class FederatedTrainer:
             # eval and selection
             best_model_this_round = None
             best_score_this_round = 0.0
-
+            best_model_this_round_id = -1
             for agg_id, (agg_model, contributors) in enumerate(aggregated_models):
                 self.logger.info(
                     f"Evaluating Aggregated Model {agg_id} "
@@ -105,6 +105,7 @@ class FederatedTrainer:
                 if score > best_score_this_round:
                     best_model_this_round = deepcopy(agg_model)
                     best_score_this_round = score
+                    best_model_this_round_id = agg_id
 
                 del agg_model
                 torch.cuda.empty_cache()
@@ -118,13 +119,21 @@ class FederatedTrainer:
             if best_score_this_round > best_score_prev:
                 model = best_model_this_round
                 best_score_prev = best_score_this_round
-                self.logger.info(f"Model updated. Score: {best_score_this_round:.4f}")
+                best_loss = evaluator.compute_loss(
+                                    model,
+                                    data_info['dataloaders']['eval_loader'])
+                best_acc = evaluator.evaluate(
+                                    model,
+                                    data_info['dataloaders']['eval_loader'])
+                
+                self.logger.info(
+                    f"Model updated (ID: {best_model_this_round_id}) | "
+                    f"Selection Score: {best_score_this_round:.4f} | "
+                    f"Eval Acc: {best_acc:.4f}, Eval Loss: {best_loss:.4f}, "
+                    f"Eval Score: {best_acc / max(best_loss, 1e-12):.4f}"
+                )
             else:
                 self.logger.warning("FAIL-SAFE TRIGGERED: Model not updated")
 
-            if best_model_this_round is not None:
-                del best_model_this_round
-                torch.cuda.empty_cache()
-                gc.collect()
 
         return model

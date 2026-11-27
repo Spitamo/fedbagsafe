@@ -75,7 +75,7 @@ class LocalTrainer:
             trainer.fit(
                 node_model,
                 client_loader,
-                dataloader_map['selection_loader']
+                dataloader_map['eval_loader']
             )
 
             # apply model poisoning noise

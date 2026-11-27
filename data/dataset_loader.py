@@ -45,7 +45,7 @@ class FEMNISTDataset(Dataset):
         if isinstance(x, np.ndarray) and x.ndim == 1:
             x = x.reshape(28, 28)
 
-        x = torch.tensor(x, dtype=torch.float32)
+        x = torch.as_tensor(x, dtype=torch.float32)
         if x.ndim == 2:
             x = x.unsqueeze(0)
 
